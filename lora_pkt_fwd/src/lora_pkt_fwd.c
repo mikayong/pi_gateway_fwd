@@ -776,8 +776,8 @@ static int parse_gateway_configuration(const char * conf_file) {
     }
 
     if (sx1276 == true) {
-        str = json_object_get_value(conf_obj, "sx1276_txpw");
-        if (str != NULL) {
+        val = json_object_get_value(conf_obj, "sx1276_txpw");
+        if (val != NULL) {
             sx1276_txpw = (uint8_t)json_value_get_number(val);
             MSG_DEBUG(DEBUG_INFO, "INFO~ GW SX1276x power configured to \"%d\"\n", sx1276_txpw);
         }
