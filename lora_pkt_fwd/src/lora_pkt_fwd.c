@@ -47,8 +47,6 @@ Maintainer: Michael Coracin
 
 #include <pthread.h>
 
-#include <uci.h>
-
 #include "trace.h"
 #include "jitqueue.h"
 #include "timersync.h"
