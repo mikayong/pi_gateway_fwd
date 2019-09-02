@@ -1224,11 +1224,11 @@ int main(void)
 
     /* mqtt or lorawan */
 
-    MSG_DEBUG(DEBUG_LOG, "INFO~ sx1276:%s, sxtxpw:%d, board:%s, server_type:%s\n", sx1276_tx ? "Inuse" : "NULL", sx1276_txpw, board, server_type);
+    MSG_DEBUG(DEBUG_LOG, "INFO~ sx1276:%s, sxtxpw:%d, board:%s, server_type:%s\n", sx1276 ? "Inuse" : "NULL", sx1276_txpw, board, server_type);
 
     /* only LG08P with sx1276 */
 
-    if ((!strcmp(board, "PG08P") || !strcmp(board, "LG08P")) && atoi(sx1276_tx) > 0) {
+    if ((!strcmp(board, "PG08P") || !strcmp(board, "LG08P")) && sx1276) {
 
         sxradio = (radiodev *) malloc(sizeof(radiodev));
         sxradio->nss = 21;

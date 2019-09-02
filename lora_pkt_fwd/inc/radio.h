@@ -249,4 +249,6 @@ void single_tx(radiodev *, uint8_t *, int);
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+void wait_us(unsigned long a);
+
 #endif   //defined _RADIO_H
