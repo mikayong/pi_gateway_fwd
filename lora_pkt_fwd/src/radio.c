@@ -9,6 +9,16 @@
  *
  */
 
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <linux/spi/spidev.h>
+#include <sys/ioctl.h>
+
+#include "loragw_hal.h"
 #include "radio.h"
 
 extern int32_t lgw_sf_getval(int x);
@@ -820,21 +830,5 @@ void single_tx(radiodev *dev, uint8_t *payload, int size) {
 
     // go from stanby to sleep
     opmode(dev->spiport, OPMODE_SLEEP);
-}
-
-void wait_us(unsigned long a) {
-    struct timespec dly;
-    struct timespec rem;
-
-    dly.tv_sec = a / 1000000;
-    dly.tv_nsec = ((long)a % 1000000) * 1000;
-
-    //MSG("NOTE dly: %ld sec %ld ns\n", dly.tv_sec, dly.tv_nsec);
-
-    if((dly.tv_sec > 0) || ((dly.tv_sec == 0) && (dly.tv_nsec > 100000))) {
-        clock_nanosleep(CLOCK_MONOTONIC, 0, &dly, &rem);
-        //MSG("NOTE remain: %ld sec %ld ns\n", rem.tv_sec, rem.tv_nsec);
-    }
-    return;
 }
 

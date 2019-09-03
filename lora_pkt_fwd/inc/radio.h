@@ -12,22 +12,6 @@
 #ifndef _RADIO_H
 #define _RADIO_H
 
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <time.h>
-
-#include <linux/spi/spidev.h>
-#include <sys/ioctl.h>
-
-#include "loragw_hal.h"
-
 // ####################################################################
 // Registers Mapping
 // ####################################################################
@@ -248,7 +232,5 @@ void txlora(radiodev *, struct lgw_pkt_tx_s *);
 void single_tx(radiodev *, uint8_t *, int); 
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-void wait_us(unsigned long a);
 
 #endif   //defined _RADIO_H

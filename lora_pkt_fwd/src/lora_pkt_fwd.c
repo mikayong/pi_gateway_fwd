@@ -2771,7 +2771,7 @@ void thread_jit(void) {
                         
 
                         if (pkt.tx_mode != IMMEDIATE && diff_us > 0 && diff_us < 30000/*JIT_START_DELAY*/)
-                            wait_us(diff_us);
+                            wait_ms(diff_us/1000);
 
                         /*
                         gettimeofday(&current_unix_time, NULL);
