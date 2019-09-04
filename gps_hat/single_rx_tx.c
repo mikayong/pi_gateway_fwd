@@ -19,8 +19,8 @@
 #define RX_MODE 1
 #define RADIOHEAD 1
 
-#define RADIO1    "/dev/spidev1.0"
-#define RADIO2    "/dev/spidev2.0"
+#define RADIO1    "/dev/spidev0.0"
+#define RADIO2    "/dev/spidev0.1"
 
 static char ver[8] = "0.2";
 
@@ -54,7 +54,7 @@ static void sig_handler(int sigio) {
 }
 
 void print_help(void) {
-    printf("Usage: lg02_single_rx_tx   [-d radio_dev] select radio 1 or 2 (default:1) \n");
+    printf("Usage: single_rx_tx   [-d radio_dev] select radio 1 or 2 (default:1) \n");
     printf("                           [-t] set as tx\n");
     printf("                           [-r] set as rx\n");
     printf("                           [-f frequence] (default:868500000)\n");
@@ -206,10 +206,10 @@ int main(int argc, char *argv[])
     loradev = (radiodev *) malloc(sizeof(radiodev));
 
     if (device == 49){
-	loradev->nss = 15;
-	loradev->rst = 8;
-	loradev->dio[0] = 7;
-	loradev->dio[1] = 6;
+	loradev->nss = 25;
+	loradev->rst = 17;
+	loradev->dio[0] = 4;
+	loradev->dio[1] = 0;
 	loradev->dio[2] = 0;	
 	strncpy(radio, RADIO1, sizeof(radio));
     }
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
 	loradev->nss = 24;
 	loradev->rst = 23;
 	loradev->dio[0] = 22;
-	loradev->dio[1] = 20;
+	loradev->dio[1] = 0;
 	loradev->dio[2] = 0;
 	strncpy(radio, RADIO2, sizeof(radio));	
     }

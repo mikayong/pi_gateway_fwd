@@ -27,9 +27,6 @@
 #include <netinet/in.h> /* INET constants and stuff */
 #include <arpa/inet.h>  /* IP address conversion stuff */
 #include <netdb.h>		/* gai_strerror */
-#include <mosquitto.h>		/* gai_strerror */
-
-#include <uci.h>
 
 #include "radio.h"
 #include "jitqueue.h"
@@ -80,43 +77,28 @@ static int pt = 0, prev = 0;  /* pt is point of receive packet postion,  prev is
 volatile bool exit_sig = false; /* 1 -> application terminates cleanly (shut down hardware, close open files, etc) */
 volatile bool quit_sig = false; /* 1 -> application terminates without shutting down the hardware */
 
-/* packets filtering configuration variables */
-static bool fwd_valid_pkt = true; /* packets with PAYLOAD CRC OK are forwarded */
-static bool fwd_error_pkt = false; /* packets with PAYLOAD CRC ERROR are NOT forwarded */
-static bool fwd_nocrc_pkt = false; /* packets with NO PAYLOAD CRC are NOT forwarded */
-
 /* network configuration variables */
 static uint64_t lgwm = 0; /* Lora gateway MAC address */
-static char provider[16] = "provider";
 static char server[64] = {'\0'}; /* address of the server (host name or IPv4/IPv6) */
-static char port[8] = "port"; /* server port for upstream traffic */
-static char dwport[8] = "dwport"; /* server port for downstream traffic */
 static char serv_port_down[8] = "1700"; /* server port for downstream traffic */
 static char serv_port_up[8] = "1700"; /* server port for upstream traffic */
 static int keepalive_time = DEFAULT_KEEPALIVE; /* send a PULL_DATA request every X seconds, negative = disabled */
-static char platform[16] = "LG02/OLG02";  /* platform definition */
+static int stat_interval = 45; /* send a STAT  every X seconds */
+static char platform[16] = "GPSHAT";  /* platform definition */
 static char description[16] = "DESC";                        /* used for free form description */
-static char email[32]  = "email";                        /* used for contact email */
-static char LAT[16] = "LAT";
-static char LON[16] = "LON";
-static char gatewayid[64] = "GWID";
-static char rxsf[8] = "RXSF";
-static char txsf[8] = "TXSF";
-static char rxbw[8] = "RXBW";
-static char txbw[8] = "TXBW";
-static char rxcr[8] = "RXCR";
-static char txcr[8] = "TXCR";
-static char rxprlen[8] = "RXPRLEN";
-static char txprlen[8] = "TXPRLEN";
-static char rx_freq[16] = "RXFREQ";            /* rx frequency of radio */
-static char tx_freq[16] = "TXFREQ";            /* tx frequency of radio */
-static char syncwd1[8] = "SYNCWD";            /* tx frequency of radio */
-static char syncwd2[8] = "SYNCWD";            /* tx frequency of radio */
-static char logdebug[4] = "DEB";          /* debug info option */
-static char server_type[16] = "server_type";          /* debug info option */
-static char radio_mode[8] = "mode";          /* debug info option */
-
-static char tx_power[16] = "TXPOWER";            /* tx frequency of radio */
+static char email[32]  = "support@dragino.com";                        /* used for contact email */
+static float lat = 0.0;
+static float lon = 0.0;
+static float alt = 0.0;
+static uint8_t rfsf = 7;
+static uint16_t rfbw = 125000;
+static uint8_t rfcr = 5;
+static uint8_t rfprlen = 8;
+static uint8_t rf_power = 16;            /* tx power of radio */
+static uint32_t rf_freq = 868100000;            /* rx frequency of radio */
+static uinit8_t syncwd = 52;            /* tx frequency of radio */
+static uint8_t logdebug = 0;          /* debug info option */
+static char server_type[16] = "LoRaWAN";          /* debug info option */
 
 /* LOG Level */
 int DEBUG_PKT_FWD = 0;
@@ -129,12 +111,6 @@ int DEBUG_WARNING = 0;
 int DEBUG_ERROR = 0;    
 int DEBUG_GPS = 0;     
 int DEBUG_SPI = 0;    
-int DEBUG_UCI = 0;   
-
-/* Set location */
-static float lat=0.0;
-static float lon=0.0;
-static int   alt=0;
 
 /* values available for the 'modulation' parameters */
 /* NOTE: arbitrary values */
@@ -189,24 +165,6 @@ static uint32_t autoquit_threshold = 0; /* enable auto-quit after a number of no
 /* Just In Time TX scheduling */
 static struct jit_queue_s jit_queue;
 
-/* mqtt publish */
-/*
-static bool mqttconnect = true ;
-
-static struct mqtt_config mconf = {
-	.id = "client_id",
-	.keepalive = 300,
-	.host = "server",
-	.port = "port",
-	.qos = 1,
-	.topic = "topic_format", 
-	.data_format = "data_format", 
-	.username = "username",
-	.password = "password",
-        .clean_session = true,
-};
-*/
-
 /* -------------------------------------------------------------------------- */
 /* --- PRIVATE FUNCTIONS DECLARATION ---------------------------------------- */
 
@@ -218,7 +176,7 @@ static bool get_config(const char *section, char *option, int len);
 
 static double difftimespec(struct timespec end, struct timespec beginning);
 
-//static int my_publish(struct mqtt_config *);
+static int parse_gateway_config(const char * conf_file);
 
 /* radio devices */
 
@@ -244,36 +202,6 @@ static void sig_handler(int sigio) {
     return;
 }
 
-static bool get_config(const char *section, char *option, int len) {
-    struct uci_package * pkg = NULL;
-    struct uci_element *e;
-    const char *value;
-    bool ret = false;
-
-    ctx = uci_alloc_context(); 
-    if (UCI_OK != uci_load(ctx, uci_config_file, &pkg))  
-        goto cleanup;   /* load uci conifg failed*/
-
-    uci_foreach_element(&pkg->sections, e)
-    {
-        struct uci_section *st = uci_to_section(e);
-
-        if(!strcmp(section, st->e.name))  /* compare section name */ {
-            if (NULL != (value = uci_lookup_option_string(ctx, st, option))) {
-	         memset(option, 0, len);
-                 strncpy(option, value, len); 
-                 ret = true;
-                 break;
-            }
-        }
-    }
-    uci_unload(ctx, pkg); /* free pkg which is UCI package */
-cleanup:
-    uci_free_context(ctx);
-    ctx = NULL;
-    return ret;
-}
-
 static double difftimespec(struct timespec end, struct timespec beginning) {
     double x;
     
@@ -281,6 +209,156 @@ static double difftimespec(struct timespec end, struct timespec beginning) {
     x += (double)(end.tv_sec - beginning.tv_sec);
     
     return x;
+}
+
+static int parse_gateway_config(const char * conf_file) {
+    const char conf_obj_name[] = "gateway_conf";
+    JSON_Value *root_val;
+    JSON_Object *conf_obj = NULL;
+    JSON_Value *val = NULL; /* needed to detect the absence of some fields */
+    const char *str; /* pointer to sub-strings in the JSON data */
+    unsigned long long ull = 0;
+
+    /* try to parse JSON */
+    root_val = json_parse_file_with_comments(conf_file);
+    if (root_val == NULL) {
+        MSG_LOG(DEBUG_ERROR, "ERROR~ %s is not a valid JSON file\n", conf_file);
+        exit(EXIT_FAILURE);
+    }
+
+    /* point to the gateway configuration object */
+    conf_obj = json_object_get_object(json_value_get_object(root_val), conf_obj_name);
+    if (conf_obj == NULL) {
+        MSG_LOG(DEBUG_INFO, "INFO~ %s does not contain a JSON object named %s\n", conf_file, conf_obj_name);
+        return -1;
+    } else {
+        MSG_LOG(DEBUG_INFO, "INFO~ %s does contain a JSON object named %s, parsing gateway parameters\n", conf_file, conf_obj_name);
+    }
+
+    /* gateway unique identifier (aka MAC address) (optional) */
+    str = json_object_get_string(conf_obj, "gateway_ID");
+    if (str != NULL) {
+        sscanf(str, "%llx", &ull);
+        lgwm = ull;
+        MSG_LOG(DEBUG_INFO, "INFO~ gateway MAC address is configured to %016llX\n", ull);
+    }
+
+    /* server hostname or IP address (optional) */
+    str = json_object_get_string(conf_obj, "server_address");
+    if (str != NULL) {
+        strncpy(serv_addr, str, sizeof server);
+        MSG_LOG(DEBUG_INFO, "INFO~ server hostname or IP address is configured to \"%s\"\n", server);
+    }
+
+    /* get up and down ports (optional) */
+    val = json_object_get_value(conf_obj, "serv_port_up");
+    if (val != NULL) {
+        snprintf(serv_port_up, sizeof serv_port_up, "%u", (uint16_t)json_value_get_number(val));
+        MSG_LOG(DEBUG_INFO, "INFO~ upstream port is configured to \"%s\"\n", serv_port_up);
+    }
+
+    val = json_object_get_value(conf_obj, "serv_port_down");
+    if (val != NULL) {
+        snprintf(serv_port_down, sizeof serv_port_down, "%u", (uint16_t)json_value_get_number(val));
+        MSG_LOG(DEBUG_INFO, "INFO~ downstream port is configured to \"%s\"\n", serv_port_down);
+    }
+
+    /* get keep-alive interval (in seconds) for downstream (optional) */
+    val = json_object_get_value(conf_obj, "keepalive_interval");
+    if (val != NULL) {
+        keepalive_time = (int)json_value_get_number(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ downstream keep-alive interval is configured to %u seconds\n", keepalive_time);
+    }
+
+    /* get interval (in seconds) for statistics display (optional) */
+    val = json_object_get_value(conf_obj, "stat_interval");
+    if (val != NULL) {
+        stat_interval = (unsigned)json_value_get_number(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ statistics display interval is configured to %u seconds\n", stat_interval);
+    }
+
+    /* get time-out value (in ms) for upstream datagrams (optional) */
+    val = json_object_get_value(conf_obj, "push_timeout_ms");
+    if (val != NULL) {
+        push_timeout_half.tv_usec = 500 * (long int)json_value_get_number(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ upstream PUSH_DATA time-out is configured to %u ms\n", (unsigned)(push_timeout_half.tv_usec / 500));
+    }
+
+    str = json_object_get_string(conf_obj, "server_type");
+    if (str != NULL) {
+        strncpy(server_type, str, sizeof server_type);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW mode is configured to \"%s\"\n", server_type);
+    }
+
+    str = json_object_get_string(conf_obj, "platform");
+    if (str != NULL) {
+        strncpy(platform, str, sizeof platform);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW module is configured to \"%s\"\n", platform);
+    }
+
+    val = json_object_get_value(conf_obj, "lat");
+    if (val != NULL) {
+        lat = (double)json_value_get_boolean(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW lat set to %lf\n", lat);
+    }
+
+    val = json_object_get_value(conf_obj, "lon");
+    if (val != NULL) {
+        lon = (double)json_value_get_boolean(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW lon set to %lf\n", lon);
+    }
+
+    val = json_object_get_value(conf_obj, "alt");
+    if (val != NULL) {
+        alt = (double)json_value_get_boolean(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW alt set to %lf\n", alt);
+    }
+
+    val = json_object_get_value(conf_obj, "rfsf");
+    if (val != NULL) {
+        rfsf = (uint8_t)json_value_get_boolean(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW rfsf set to %u\n", rfsf);
+    }
+
+    val = json_object_get_value(conf_obj, "rfbw");
+    if (val != NULL) {
+        rfbw = (uint16_t)json_value_get_boolean(rfbw);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW rfbw set to %u\n", rfbw);
+    }
+
+    val = json_object_get_value(conf_obj, "rfcr");
+    if (val != NULL) {
+        rfcr = (uint8_t)json_value_get_boolean(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW rfcr set to %u\n", rfcr);
+    }
+
+    val = json_object_get_value(conf_obj, "rfprlen");
+    if (val != NULL) {
+        rfprlen = (uint8_t)json_value_get_boolean(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW rfprlen set to %u\n", rfprlen);
+    }
+
+    val = json_object_get_value(conf_obj, "rf_freq");
+    if (val != NULL) {
+        rf_freq = (uint32_t)json_value_get_number(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW frequency configured to \"%ld\"\n", rf_freq);
+    }
+
+    val = json_object_get_value(conf_obj, "syncwd");
+    if (val != NULL) {
+        syncwd = (uint8_t)json_value_get_number(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW syncword configured to \"0x%x\"\n", syncwd);
+    }
+    
+    val = json_object_get_value(conf_obj, "logdebug");
+    if (val != NULL) {
+        logdebug = (uint8_t)json_value_get_number(val);
+        MSG_LOG(DEBUG_INFO, "INFO~ GW logdebug configured to \"0x%x\"\n", logdebug);
+    }
+
+    /* free JSON parsing data structure */
+    json_value_free(root_val);
+    return 0;
 }
 
 static int init_socket(const char *servaddr, const char *servport, const char *rectimeout, int len) {
@@ -509,157 +587,16 @@ int main(int argc, char *argv[])
     pthread_t thrid_down;
     pthread_t thrid_push;
     pthread_t thrid_jit;
-    
-    unsigned long long ull = 0;
 
-    /* display version informations */
-    //MSG("*** Basic Packet Forwarder for LG02 ***\nVersion: " VERSION_STRING "\n");
-    //
-    // Make sure only one copy of the daemon is running.
-    if (already_running()) {
-        MSG_LOG(DEBUG_ERROR, "ERROR~ %s: already running!\n", argv[0]);
-        exit(1);
-    }
+    char *local_cfg_path = "/etc/lora-packet-forwarder/local_conf.json"; /* contain node specific configuration, overwrite global parameters for parameters that are defined in both */
 
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    /* load configuration */
-    strcpy(uci_config_file, "/etc/config/gateway");
-
-    if (!get_config("general", provider, 16)){
-        strcpy(provider, "ttn");  
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option provider=%s\n", provider);
-    }
-
-    snprintf(server, sizeof(server), "%s_server", provider); 
-
-    if (!get_config("general", server, sizeof(server))){ /*set default:router.eu.thethings.network*/
-        strcpy(server, "router.us.thethings.network");  
-    }
-
-    /*
-    if (!get_config("general", ttn_s, 64)){
-        strcpy(ttn_s, "router.us.thethings.network");  
-    }
-    */
-
-    if (!get_config("general", port, 8)){
-        strcpy(port, "1700");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option port=%s\n", port);
-    }
-
-    strcpy(serv_port_up, port);
-
-    if (!get_config("general", dwport, 8)){
-        strcpy(dwport, "1700");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option port=%s\n", port);
-    }
-
-    strcpy(serv_port_down, dwport);
-
-    if (!get_config("general", email, 32)){
-        strcpy(email, "dragino@dragino.com");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option email=%s\n", email);
-    }
-
-    if (!get_config("general", gatewayid, 64)){
-        strcpy(gatewayid, "a84041ffff16c21c");      /*set default:router.eu.thethings.network*/
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option gatewayid=%s\n", gatewayid);
-    } 
-
-    if (!get_config("general", LAT, 16)){
-        strcpy(LAT, "0");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option lat=%s\n", LAT);
-    }
-
-    if (!get_config("general", LON, 16)){
-        strcpy(LON, "0");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option lon=%s\n", LON);
-    }
-
-    if (!get_config("general", logdebug, 4)){
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option logdebug=%s\n", logdebug);
-    }
-
-    /* server_type : 1.lorawan  2.relay  3.mqtt  4.tcpudp */
-    if (!get_config("general", server_type, 16)){
-        strcpy(server_type, "lorawan");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option server_type=%s\n", server_type);
-    }
-
-    /* mode0.A for RX, B for TX mode1.B for RX, A for TX mode2. both for RX, no TX */
-    if (!get_config("general", radio_mode, 8)){
-        strcpy(radio_mode, "0");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option radio_mode=%s\n", radio_mode);
-    }
-
-    /* power for transimit form 5 to 20 */
-    if (!get_config("general", tx_power, 8)){
-        strcpy(tx_power, "16");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option tx_power=%s\n", tx_power);
-    }
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-    if (!get_config("radio1", rx_freq, 16)){
-        strcpy(rx_freq, "902320000"); /* default frequency*/
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option rxfreq=%s\n", rx_freq);
-    }
-
-    if (!get_config("radio1", rxsf, 8)){
-        strcpy(rxsf, "7");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option rxsf=%s\n", rxsf);
-    }
-
-    if (!get_config("radio1", rxcr, 8)){
-        strcpy(rxcr, "5");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option coderate=%s\n", rxcr);
-    }
-    
-    if (!get_config("radio1", rxbw, 8)){
-        strcpy(rxbw, "125000");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option rxbw=%s\n", rxbw);
-    }
-
-    if (!get_config("radio1", rxprlen, 8)){
-        strcpy(rxprlen, "8");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option rxprlen=%s\n", rxprlen);
-    }
-
-    if (!get_config("radio1", syncwd1, 8)){
-        strcpy(syncwd1, "52");  //Value 0x34 is reserved for LoRaWAN networks
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option syncword=0x%02x\n", syncwd1);
-    }
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-    if (!get_config("radio2", tx_freq, 16)){
-        strcpy(tx_freq, "923300000"); /* default frequency*/
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option txfreq=%s\n", tx_freq);
-    }
-
-    if (!get_config("radio2", txsf, 8)){
-        strcpy(txsf, "9");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option txsf=%s\n", txsf);
-    }
-
-    if (!get_config("radio2", txcr, 8)){
-        strcpy(txcr, "5");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option coderate=%s\n", txcr);
-    }
-
-    if (!get_config("radio2", txbw, 8)){
-        strcpy(txbw, "125000");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option rxbw=%s\n", txbw);
-    }
-
-    if (!get_config("radio2", txprlen, 8)){
-        strcpy(txprlen, "8");
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option txprlen=%s\n", txprlen);
-    }
-
-    if (!get_config("radio2", syncwd2, 8)){
-        strcpy(syncwd2, "52");  //Value 0x34 is reserved for LoRaWAN networks
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ get option syncword2=0x%02x\n", syncwd2);
+    /* load configuration files */
+    if (access(local_cfg_path, R_OK) == 0) { /* if there is a local conf, parse the conf */
+        MSG_LOG(DEBUG_INFO, "INFO~ found local configuration file %s, parsing it\n", local_cfg_path);
+        x = parse_gateway_config(local_cfg_path);
+        if (x != 0) {
+            exit(EXIT_FAILURE);
+        }
     }
 
     switch (atoi(logdebug)) {
@@ -685,60 +622,10 @@ int main(int argc, char *argv[])
             DEBUG_ERROR = 1;
             DEBUG_GPS = 1;
             DEBUG_BEACON = 1;
-            DEBUG_UCI = 1;
             break;
         default:
             break;
     }
-
-    lat = atof(LAT);
-    lon = atof(LON);
-
-    sscanf(gatewayid, "%llx", &ull);
-    lgwm = ull;
-
-    /*
-    if (!strcmp(server_type, "mqtt")) {
-        char mqtt_server_type[32] = "server_type";
-
-        strcpy(uci_config_file, "/etc/config/mqtt");
-
-        if (!get_config("general", mqtt_server_type, sizeof(mqtt_server_type))){
-            strcpy(mqtt_server_type, "thingspeak");  
-        }
-
-        if (!get_config("general", mconf.username, sizeof(mconf.username))){
-            strcpy(mconf.username, "username");  
-        }
-
-        if (!get_config("general", mconf.password, sizeof(mconf.password))){
-            strcpy(mconf.password, "password");  
-        }
-
-        if (!get_config("general", mconf.id, sizeof(mconf.id))){
-            strcpy(mconf.id, "client_id");  
-        }
-
-        if (!get_config(mqtt_server_type, mconf.host, sizeof(mconf.host))){
-            strcpy(mconf.host, "mqtt.thingspeak.com");  
-        }
-
-        if (!get_config(mqtt_server_type, mconf.port, sizeof(mconf.port))){
-            strcpy(mconf.port, "1883");  
-        }
-
-        if (!get_config(mqtt_server_type, mconf.topic, sizeof(mconf.topic))){
-            strcpy(mconf.topic, "topic_format");  
-        }
-
-        if (!get_config(mqtt_server_type, mconf.data_format, sizeof(mconf.data_format))){
-            strcpy(mconf.topic, "topic_data_format");  
-        }
-
-        MSG_LOG(DEBUG_UCI, "UCIINFO~ MQTT: host=%s, port=%s, name=%s, password=%s, topic=%s, data_format=%s\n", mconf.host, mconf.port, \
-                                        mconf.username, mconf.password, mconf.topic, mconf.data_format);
-    }
-    */
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -754,56 +641,41 @@ int main(int argc, char *argv[])
 
     txdev = (radiodev *) malloc(sizeof(radiodev));
     
-    rxdev->nss = 15;
-    rxdev->rst = 8;
-    rxdev->dio[0] = 7;
-    rxdev->dio[1] = 6;
+    rxdev->nss = 25;
+    rxdev->rst = 17;
+    rxdev->dio[0] = 4;
+    rxdev->dio[1] = 0;
     rxdev->dio[2] = 0;
     rxdev->spiport = lgw_spi_open(SPI_DEV_RX);
     if (rxdev->spiport < 0) { 
         MSG_LOG(DEBUG_ERROR, "ERROR~ open spi_dev_tx error!\n");
         goto clean;
     }
-    rxdev->freq = atol(rx_freq);
-    rxdev->sf = atoi(rxsf);
-    rxdev->bw = atol(rxbw);
-    rxdev->cr = atoi(rxcr);
+    rxdev->freq = rf_freq;
+    rxdev->sf = rfsf;
+    rxdev->bw = rfbw;
+    rxdev->cr = rfcr;
     rxdev->nocrc = 0;  /* crc check */
-    rxdev->prlen = atoi(rxprlen);
-    rxdev->syncword = atoi(syncwd1);
+    rxdev->prlen = rfprlen;
+    rxdev->syncword = syncwd;
     rxdev->invertio = 0;
-    rxdev->power = atoi(tx_power);
+    rxdev->power = rf_power;
     strcpy(rxdev->desc, "Radio1");
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     txdev->nss = 24;
     txdev->rst = 23;
+    txdev->syncword = syncwd;
     txdev->dio[0] = 22;
-    txdev->dio[1] = 20;
+    txdev->dio[1] = 0;
     txdev->dio[2] = 0;
     txdev->spiport = lgw_spi_open(SPI_DEV_TX);
     if (txdev->spiport < 0) {
         MSG_LOG(DEBUG_ERROR, "ERROR~ open spi_dev_tx error!\n");
         goto clean;
     }
-    txdev->freq = atol(tx_freq);
-    txdev->sf = atoi(txsf);
-    txdev->bw = atol(txbw);
-    txdev->cr = atoi(txcr);
-    txdev->nocrc = 0;
-    txdev->prlen = atoi(txprlen);
-    txdev->syncword = atoi(syncwd2);
-    txdev->invertio = 0;
-    txdev->power = atoi(tx_power);
+    txdev->power = rf_power;
     strcpy(txdev->desc, "Radio2");
-
-    /* swap radio1 and radio2 */
-    if (!strcmp(radio_mode, "1")) {
-        radiodev *tmpdev;
-        tmpdev = rxdev;
-        rxdev = txdev;
-        txdev = tmpdev;
-    }
 
     MSG_LOG(DEBUG_INFO, "INFO~ %s struct: spiport=%d, freq=%ld, sf=%d, syncwd=0x%02x\n", rxdev->desc, rxdev->spiport, rxdev->freq, rxdev->sf, rxdev->syncword);
     MSG_LOG(DEBUG_INFO, "INFO~ %s struct: spiport=%d, freq=%ld, sf=%d, syncwd=0x%02x\n", txdev->desc, txdev->spiport, txdev->freq, txdev->sf, txdev->syncword);
@@ -830,21 +702,10 @@ int main(int argc, char *argv[])
     net_mac_h = htonl((uint32_t)(0xFFFFFFFF & (lgwm>>32)));
     net_mac_l = htonl((uint32_t)(0xFFFFFFFF &  lgwm  ));
 
-    MSG_LOG(DEBUG_INFO, "Lora Gateway service Mode=%s, gatewayID=%s\n", server_type, gatewayid);
-
-    fp = fopen("/etc/lora/desc", "w+");
-    if (NULL != fp) {
-        fprintf(fp, "%s struct: spiport=%d, freq=%ld, sf=%d\n", rxdev->desc, rxdev->spiport, rxdev->freq, rxdev->sf);
-        fprintf(fp, "%s struct: spiport=%d, freq=%ld, sf=%d\n", txdev->desc, txdev->spiport, txdev->freq, txdev->sf);
-        fprintf(fp, "Lora Gateway service Mode=%s, gatewayID=%s, server=%s\n", server_type, gatewayid, server);
-        fflush(fp);
-        fclose(fp);
-    }
-
     /* look for server address w/ upstream port */
     //MSG("Looking for server with upstream port......\n");
     if (!strcmp(server_type, "lorawan")) {
-        MSG_LOG(DEBUG_INFO, "INFO~ Start lora packet forward daemon, server = %s, port = %s\n", server, port);
+        MSG_LOG(DEBUG_INFO, "INFO~ Start lora packet forward daemon, server = %s, port = %s\n", server, serv_port_up);
 
         if ((sock_up = init_socket(server, serv_port_up,\
                         (void *)&push_timeout_half, sizeof(push_timeout_half))) == -1)
@@ -1225,10 +1086,10 @@ void thread_up(void) {
         buff_up[2] = token_l;
         buff_index = 12; /* 12-byte header */
 
-        j = snprintf((char *)(buff_up + buff_index), TX_BUFF_SIZE - buff_index, "{\"rxpk\":[{\"time\":\"%s\",\"tmst\":%u,\"chan\":0,\"rfch\":1,\"freq\":%.6lf,\"stat\":1,\"modu\":\"LORA\",\"datr\":\"SF%dBW125\",\"codr\":\"4/%s\",\"lsnr\":%.1f", fetch_timestamp, tmst, (double)(rxdev->freq)/1000000, rxdev->sf, rxcr, pktrx[prev].snr);
+        j = snprintf((char *)(buff_up + buff_index), TX_BUFF_SIZE - buff_index, "{\"rxpk\":[{\"time\":\"%s\",\"tmst\":%u,\"chan\":0,\"rfch\":1,\"freq\":%.6lf,\"stat\":1,\"modu\":\"LORA\",\"datr\":\"SF%dBW125\",\"codr\":\"4/%d\",\"lsnr\":%.1f", fetch_timestamp, tmst, (double)(rxdev->freq)/1000000, rxdev->sf, rfcr, pktrx[prev].snr);
 
         /*
-        j = snprintf((char *)(buff_up + buff_index), TX_BUFF_SIZE - buff_index, "{\"rxpk\":[{\"tmst\":%u,\"chan\":0,\"rfch\":1,\"freq\":%.6lf,\"stat\":1,\"modu\":\"LORA\",\"datr\":\"SF%dBW125\",\"codr\":\"4/%s\",\"lsnr\":7.8", tmst, (double)(rxdev->freq)/1000000, rxdev->sf, rxcr);
+        j = snprintf((char *)(buff_up + buff_index), TX_BUFF_SIZE - buff_index, "{\"rxpk\":[{\"tmst\":%u,\"chan\":0,\"rfch\":1,\"freq\":%.6lf,\"stat\":1,\"modu\":\"LORA\",\"datr\":\"SF%dBW125\",\"codr\":\"4/%s\",\"lsnr\":7.8", tmst, (double)(rxdev->freq)/1000000, rxdev->sf, rfcr);
         */
 
         buff_index += j;

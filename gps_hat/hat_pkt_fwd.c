@@ -103,16 +103,15 @@ static char email[32]  = "support@dragino.com";                        /* used f
 static float lat = 0.0;
 static float lon = 0.0;
 static float alt = 0.0;
-static char gatewayid[64] = "GWID";
 static uint8_t rfsf = 7;
 static uint16_t rfbw = 125000;
-static uint8_t rfcr = 4;
+static uint8_t rfcr = 5;
 static uint8_t rfprlen = 8;
 static uint8_t rf_power = 16;            /* tx power of radio */
 static uint32_t rf_freq = 868100000;            /* rx frequency of radio */
 static uinit8_t syncwd = 52;            /* tx frequency of radio */
 static uint8_t logdebug = 0;          /* debug info option */
-static char server_type[16] = "server_type";          /* debug info option */
+static char server_type[16] = "LoRaWAN";          /* debug info option */
 
 /* LOG Level */
 int DEBUG_PKT_FWD = 0;
@@ -125,7 +124,6 @@ int DEBUG_WARNING = 0;
 int DEBUG_ERROR = 0;    
 int DEBUG_GPS = 0;     
 int DEBUG_SPI = 0;    
-int DEBUG_UCI = 0;   
 
 /* values available for the 'modulation' parameters */
 /* NOTE: arbitrary values */
@@ -584,17 +582,10 @@ int main(int argc, char *argv[])
             DEBUG_ERROR = 1;
             DEBUG_GPS = 1;
             DEBUG_BEACON = 1;
-            DEBUG_UCI = 1;
             break;
         default:
             break;
     }
-
-    lat = atof(LAT);
-    lon = atof(LON);
-
-    sscanf(gatewayid, "%llx", &ull);
-    lgwm = ull;
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -618,15 +609,15 @@ int main(int argc, char *argv[])
         MSG_LOG(DEBUG_ERROR, "ERROR~ open spi_dev_tx error!\n");
         goto clean;
     }
-    rfdev->freq = atol(rf_freq);
-    rfdev->sf = atoi(rfsf);
-    rfdev->bw = atol(rfbw);
-    rfdev->cr = atoi(rfcr);
+    rfdev->freq = rf_freq;
+    rfdev->sf = rfsf;
+    rfdev->bw = rfbw;
+    rfdev->cr = rfcr;
     rfdev->nocrc = 0;  /* crc check */
-    rfdev->prlen = atoi(rfprlen);
-    rfdev->syncword = atoi(syncwd);
+    rfdev->prlen = rfprlen;
+    rfdev->syncword = syncwd;
     rfdev->invertio = 0;
-    rfdev->power = atoi(rf_power);
+    rfdev->power = rf_power;
     strcpy(rfdev->desc, "RF_RADIO");
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -646,19 +637,8 @@ int main(int argc, char *argv[])
     net_mac_h = htonl((uint32_t)(0xFFFFFFFF & (lgwm>>32)));
     net_mac_l = htonl((uint32_t)(0xFFFFFFFF &  lgwm  ));
 
-    MSG_LOG(DEBUG_INFO, "Lora Gateway service Mode=%s, gatewayID=%s\n", server_type, gatewayid);
-
-    /* export the lora parameters for the luci ui */
-    fp = fopen("/etc/lora/desc", "w+");
-    if (NULL != fp) {
-        fprintf(fp, "%s struct: spiport=%d, freq=%ld, sf=%d\n", rfdev->desc, rfdev->spiport, rfdev->freq, rfdev->sf);
-        fprintf(fp, "Lora Gateway service Mode=%s, gatewayID=%s, server=%s\n", server_type, gatewayid, server);
-        fflush(fp);
-        fclose(fp);
-    }
-
     if (!strcmp(server_type, "lorawan")) {
-        MSG_LOG(DEBUG_INFO, "INFO~ Start lora packet forward daemon, server = %s, port = %s\n", server, port);
+        MSG_LOG(DEBUG_INFO, "INFO~ Start lora packet forward daemon, server = %s, port = %s\n", server, serv_port_up);
 
         /* look for server address w/ upstream port */
         if ((sock_up = init_socket(server, serv_port_up,\
@@ -1037,7 +1017,7 @@ void thread_up(void) {
         buff_up[2] = token_l;
         buff_index = 12; /* 12-byte header */
 
-        j = snprintf((char *)(buff_up + buff_index), TX_BUFF_SIZE - buff_index, "{\"rxpk\":[{\"time\":\"%s\",\"tmst\":%u,\"chan\":0,\"rfch\":1,\"freq\":%.6lf,\"stat\":1,\"modu\":\"LORA\",\"datr\":\"SF%dBW125\",\"codr\":\"4/%s\",\"lsnr\":%.1f", fetch_timestamp, tmst, (double)(rfdev->freq)/1000000, rfdev->sf, rfcr, pktrx[prev].snr);
+        j = snprintf((char *)(buff_up + buff_index), TX_BUFF_SIZE - buff_index, "{\"rxpk\":[{\"time\":\"%s\",\"tmst\":%u,\"chan\":0,\"rfch\":1,\"freq\":%.6lf,\"stat\":1,\"modu\":\"LORA\",\"datr\":\"SF%dBW125\",\"codr\":\"4/%d\",\"lsnr\":%.1f", fetch_timestamp, tmst, (double)(rfdev->freq)/1000000, rfdev->sf, rfcr, pktrx[prev].snr);
 
         buff_index += j;
 

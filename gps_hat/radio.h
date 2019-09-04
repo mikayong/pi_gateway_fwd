@@ -9,6 +9,8 @@
  *
 */
 
+#include <stdint.h>
+
 #ifndef _RADIO_H
 #define _RADIO_H
 
@@ -253,35 +255,6 @@ struct pkt_rx_s {
 
 #define QUEUESIZE 8         /*!> size of queue */
 
-/**
- @struct 
- @brief 
-*/
-/*
-struct mqtt_config {
-	char id[64];
-	int keepalive;
-	char host[64];
-	char port[32];
-	int qos;
-	bool retain;
-	char message[256]; 
-	long msglen; 
-	char topic[128]; 
-	char data_format[128]; 
-	char username[32];
-	char password[32];
-	char cafile[32];
-	char capath[32];
-	char certfile[32];
-	char keyfile[32];
-	char ciphers[32];
-	bool insecure;
-	char psk[32];
-	char psk_identity[32];
-	bool clean_session;
-};
-*/
 
 /*******************************************************************************
  * GPIO/SPI configure

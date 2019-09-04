@@ -6,23 +6,23 @@
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 ARRAY_MAX_CAPACITY	parson.c	34;"	d	file:
 ARRAY_SIZE	base64.c	29;"	d	file:
-ASSERT	radio.h	37;"	d
+ASSERT	radio.h	15;"	d
 BEACON_GUARD	jitqueue.c	22;"	d	file:
 BEACON_RESERVED	jitqueue.c	24;"	d	file:
-BW_125KHZ	radio.h	191;"	d
-BW_15K6HZ	radio.h	194;"	d
-BW_250KHZ	radio.h	190;"	d
-BW_31K2HZ	radio.h	193;"	d
-BW_500KHZ	radio.h	189;"	d
-BW_62K5HZ	radio.h	192;"	d
-BW_7K8HZ	radio.h	195;"	d
-BW_UNDEFINED	radio.h	188;"	d
+BW_125KHZ	radio.h	165;"	d
+BW_15K6HZ	radio.h	168;"	d
+BW_250KHZ	radio.h	164;"	d
+BW_31K2HZ	radio.h	167;"	d
+BW_500KHZ	radio.h	163;"	d
+BW_62K5HZ	radio.h	166;"	d
+BW_7K8HZ	radio.h	169;"	d
+BW_UNDEFINED	radio.h	162;"	d
 CRIT	base64.c	30;"	d	file:
-CR_LORA_4_5	radio.h	211;"	d
-CR_LORA_4_6	radio.h	212;"	d
-CR_LORA_4_7	radio.h	213;"	d
-CR_LORA_4_8	radio.h	214;"	d
-CR_UNDEFINED	radio.h	210;"	d
+CR_LORA_4_5	radio.h	185;"	d
+CR_LORA_4_6	radio.h	186;"	d
+CR_LORA_4_7	radio.h	187;"	d
+CR_LORA_4_8	radio.h	188;"	d
+CR_UNDEFINED	radio.h	184;"	d
 DEBUG	base64.c	33;"	d	file:
 DEBUG_BEACON	hat_pkt_fwd.c	/^int DEBUG_BEACON = 0;     $/;"	v
 DEBUG_BEACON	muti_pkt_fwd.c	/^int DEBUG_BEACON = 0;     $/;"	v
@@ -47,43 +47,43 @@ DEBUG_UCI	hat_pkt_fwd.c	/^int DEBUG_UCI = 0;   $/;"	v
 DEBUG_UCI	muti_pkt_fwd.c	/^int DEBUG_UCI = 0;   $/;"	v
 DEBUG_WARNING	hat_pkt_fwd.c	/^int DEBUG_WARNING = 0;   $/;"	v
 DEBUG_WARNING	muti_pkt_fwd.c	/^int DEBUG_WARNING = 0;   $/;"	v
-DEFAULT_KEEPALIVE	hat_pkt_fwd.c	46;"	d	file:
+DEFAULT_KEEPALIVE	hat_pkt_fwd.c	55;"	d	file:
 DEFAULT_KEEPALIVE	muti_pkt_fwd.c	46;"	d	file:
-DEFAULT_STAT	hat_pkt_fwd.c	47;"	d	file:
+DEFAULT_STAT	hat_pkt_fwd.c	56;"	d	file:
 DEFAULT_STAT	muti_pkt_fwd.c	47;"	d	file:
-DETECTIONTHRESH_SF6	radio.h	178;"	d
-DETECTIONTHRESH_SF7_TO_SF12	radio.h	177;"	d
-DR_LORA_MULTI	radio.h	206;"	d
-DR_LORA_SF10	radio.h	203;"	d
-DR_LORA_SF11	radio.h	204;"	d
-DR_LORA_SF12	radio.h	205;"	d
-DR_LORA_SF7	radio.h	200;"	d
-DR_LORA_SF8	radio.h	201;"	d
-DR_LORA_SF9	radio.h	202;"	d
-DR_UNDEFINED	radio.h	199;"	d
+DETECTIONTHRESH_SF6	radio.h	152;"	d
+DETECTIONTHRESH_SF7_TO_SF12	radio.h	151;"	d
+DR_LORA_MULTI	radio.h	180;"	d
+DR_LORA_SF10	radio.h	177;"	d
+DR_LORA_SF11	radio.h	178;"	d
+DR_LORA_SF12	radio.h	179;"	d
+DR_LORA_SF7	radio.h	174;"	d
+DR_LORA_SF8	radio.h	175;"	d
+DR_LORA_SF9	radio.h	176;"	d
+DR_UNDEFINED	radio.h	173;"	d
 ERROR	parson.c	31;"	d	file:
-FETCH_SLEEP_MS	hat_pkt_fwd.c	50;"	d	file:
+FETCH_SLEEP_MS	hat_pkt_fwd.c	59;"	d	file:
 FETCH_SLEEP_MS	muti_pkt_fwd.c	50;"	d	file:
-GPIO_IN	radio.h	320;"	d
-GPIO_OUT	radio.h	319;"	d
-HIGH	radio.h	317;"	d
-IMMEDIATE	radio.h	40;"	d
-INVERTIQ2_OFF	radio.h	184;"	d
-INVERTIQ2_ON	radio.h	183;"	d
-INVERTIQ_RX_MASK	radio.h	167;"	d
-INVERTIQ_RX_OFF	radio.h	168;"	d
-INVERTIQ_RX_ON	radio.h	169;"	d
-INVERTIQ_TX_MASK	radio.h	170;"	d
-INVERTIQ_TX_OFF	radio.h	171;"	d
-INVERTIQ_TX_ON	radio.h	172;"	d
-IRQ_LORA_CDDETD_MASK	radio.h	129;"	d
-IRQ_LORA_CDDONE_MASK	radio.h	127;"	d
-IRQ_LORA_CRCERR_MASK	radio.h	124;"	d
-IRQ_LORA_FHSSCH_MASK	radio.h	128;"	d
-IRQ_LORA_HEADER_MASK	radio.h	125;"	d
-IRQ_LORA_RXDONE_MASK	radio.h	123;"	d
-IRQ_LORA_RXTOUT_MASK	radio.h	122;"	d
-IRQ_LORA_TXDONE_MASK	radio.h	126;"	d
+GPIO_IN	radio.h	294;"	d
+GPIO_OUT	radio.h	293;"	d
+HIGH	radio.h	291;"	d
+IMMEDIATE	radio.h	18;"	d
+INVERTIQ2_OFF	radio.h	158;"	d
+INVERTIQ2_ON	radio.h	157;"	d
+INVERTIQ_RX_MASK	radio.h	141;"	d
+INVERTIQ_RX_OFF	radio.h	142;"	d
+INVERTIQ_RX_ON	radio.h	143;"	d
+INVERTIQ_TX_MASK	radio.h	144;"	d
+INVERTIQ_TX_OFF	radio.h	145;"	d
+INVERTIQ_TX_ON	radio.h	146;"	d
+IRQ_LORA_CDDETD_MASK	radio.h	103;"	d
+IRQ_LORA_CDDONE_MASK	radio.h	101;"	d
+IRQ_LORA_CRCERR_MASK	radio.h	98;"	d
+IRQ_LORA_FHSSCH_MASK	radio.h	102;"	d
+IRQ_LORA_HEADER_MASK	radio.h	99;"	d
+IRQ_LORA_RXDONE_MASK	radio.h	97;"	d
+IRQ_LORA_RXTOUT_MASK	radio.h	96;"	d
+IRQ_LORA_TXDONE_MASK	radio.h	100;"	d
 JIT_ERROR_COLLISION_BEACON	jitqueue.h	/^    JIT_ERROR_COLLISION_BEACON, \/* A beacon is planned for this timeframe *\/$/;"	e	enum:jit_error_e
 JIT_ERROR_COLLISION_PACKET	jitqueue.h	/^    JIT_ERROR_COLLISION_PACKET, \/* A packet is already enqueued for this timeframe *\/$/;"	e	enum:jit_error_e
 JIT_ERROR_EMPTY	jitqueue.h	/^    JIT_ERROR_EMPTY,        \/* Downlink queue is empty *\/$/;"	e	enum:jit_error_e
@@ -114,117 +114,113 @@ JSON_Value	parson.h	/^typedef struct json_value_t  JSON_Value;$/;"	t	typeref:str
 JSON_Value_Type	parson.h	/^} JSON_Value_Type;$/;"	t	typeref:enum:json_value_type
 JSON_Value_Value	parson.c	/^} JSON_Value_Value;$/;"	t	typeref:union:json_value_value	file:
 KEEPALIVE_REC	muti_pkt_fwd.c	52;"	d	file:
-LAT	hat_pkt_fwd.c	/^static char LAT[16] = "LAT";$/;"	v	file:
 LAT	muti_pkt_fwd.c	/^static char LAT[16] = "LAT";$/;"	v	file:
-LNA_LOW_GAIN	radio.h	105;"	d
-LNA_MAX_GAIN	radio.h	103;"	d
-LNA_OFF_GAIN	radio.h	104;"	d
-LOCKFILE	radio.h	58;"	d
-LOCKMODE	radio.h	59;"	d
-LON	hat_pkt_fwd.c	/^static char LON[16] = "LON";$/;"	v	file:
+LNA_LOW_GAIN	radio.h	79;"	d
+LNA_MAX_GAIN	radio.h	77;"	d
+LNA_OFF_GAIN	radio.h	78;"	d
 LON	muti_pkt_fwd.c	/^static char LON[16] = "LON";$/;"	v	file:
-LORA_MAC_PREAMBLE	radio.h	97;"	d
-LOW	radio.h	316;"	d
-MAP_DIO0_LORA_RXDONE	radio.h	133;"	d
-MAP_DIO0_LORA_TXDONE	radio.h	134;"	d
-MAP_DIO1_LORA_NOP	radio.h	136;"	d
-MAP_DIO1_LORA_RXTOUT	radio.h	135;"	d
-MAP_DIO2_LORA_NOP	radio.h	137;"	d
+LORA_MAC_PREAMBLE	radio.h	71;"	d
+LOW	radio.h	290;"	d
+MAP_DIO0_LORA_RXDONE	radio.h	107;"	d
+MAP_DIO0_LORA_TXDONE	radio.h	108;"	d
+MAP_DIO1_LORA_NOP	radio.h	110;"	d
+MAP_DIO1_LORA_RXTOUT	radio.h	109;"	d
+MAP_DIO2_LORA_NOP	radio.h	111;"	d
 MAX	parson.c	40;"	d	file:
-MAXLINE	radio.h	161;"	d
+MAXLINE	radio.h	135;"	d
 MAX_NESTING	parson.c	36;"	d	file:
-MIN_LORA_PREAMB	hat_pkt_fwd.c	64;"	d	file:
+MIN_LORA_PREAMB	hat_pkt_fwd.c	73;"	d	file:
 MIN_LORA_PREAMB	muti_pkt_fwd.c	63;"	d	file:
-MOD_FSK	hat_pkt_fwd.c	137;"	d	file:
+MOD_FSK	hat_pkt_fwd.c	134;"	d	file:
 MOD_FSK	muti_pkt_fwd.c	143;"	d	file:
-MOD_LORA	hat_pkt_fwd.c	136;"	d	file:
+MOD_LORA	hat_pkt_fwd.c	133;"	d	file:
 MOD_LORA	muti_pkt_fwd.c	142;"	d	file:
-MOD_UNDEFINED	hat_pkt_fwd.c	135;"	d	file:
+MOD_UNDEFINED	hat_pkt_fwd.c	132;"	d	file:
 MOD_UNDEFINED	muti_pkt_fwd.c	141;"	d	file:
-MSG	radio.h	44;"	d
-MSG_DEBUG	radio.h	45;"	d
-MSG_LOG	radio.h	51;"	d
+MSG	radio.h	22;"	d
+MSG_DEBUG	radio.h	23;"	d
+MSG_LOG	radio.h	29;"	d
 OBJECT_MAX_CAPACITY	parson.c	35;"	d	file:
-ON_GPS	radio.h	42;"	d
-OPMODE_CAD	radio.h	118;"	d
-OPMODE_FSRX	radio.h	115;"	d
-OPMODE_FSTX	radio.h	113;"	d
-OPMODE_LORA	radio.h	109;"	d
-OPMODE_MASK	radio.h	110;"	d
-OPMODE_RX	radio.h	116;"	d
-OPMODE_RX_SINGLE	radio.h	117;"	d
-OPMODE_SLEEP	radio.h	111;"	d
-OPMODE_STANDBY	radio.h	112;"	d
-OPMODE_TX	radio.h	114;"	d
+ON_GPS	radio.h	20;"	d
+OPMODE_CAD	radio.h	92;"	d
+OPMODE_FSRX	radio.h	89;"	d
+OPMODE_FSTX	radio.h	87;"	d
+OPMODE_LORA	radio.h	83;"	d
+OPMODE_MASK	radio.h	84;"	d
+OPMODE_RX	radio.h	90;"	d
+OPMODE_RX_SINGLE	radio.h	91;"	d
+OPMODE_SLEEP	radio.h	85;"	d
+OPMODE_STANDBY	radio.h	86;"	d
+OPMODE_TX	radio.h	88;"	d
 PARSON_VERSION	parson.h	35;"	d
-PAYLOAD_LENGTH	radio.h	99;"	d
-PKT_PULL_ACK	hat_pkt_fwd.c	60;"	d	file:
+PAYLOAD_LENGTH	radio.h	73;"	d
+PKT_PULL_ACK	hat_pkt_fwd.c	69;"	d	file:
 PKT_PULL_ACK	muti_pkt_fwd.c	60;"	d	file:
-PKT_PULL_DATA	hat_pkt_fwd.c	58;"	d	file:
+PKT_PULL_DATA	hat_pkt_fwd.c	67;"	d	file:
 PKT_PULL_DATA	muti_pkt_fwd.c	58;"	d	file:
-PKT_PULL_RESP	hat_pkt_fwd.c	59;"	d	file:
+PKT_PULL_RESP	hat_pkt_fwd.c	68;"	d	file:
 PKT_PULL_RESP	muti_pkt_fwd.c	59;"	d	file:
-PKT_PUSH_ACK	hat_pkt_fwd.c	57;"	d	file:
+PKT_PUSH_ACK	hat_pkt_fwd.c	66;"	d	file:
 PKT_PUSH_ACK	muti_pkt_fwd.c	57;"	d	file:
-PKT_PUSH_DATA	hat_pkt_fwd.c	56;"	d	file:
+PKT_PUSH_DATA	hat_pkt_fwd.c	65;"	d	file:
 PKT_PUSH_DATA	muti_pkt_fwd.c	56;"	d	file:
-PKT_TX_ACK	hat_pkt_fwd.c	61;"	d	file:
+PKT_TX_ACK	hat_pkt_fwd.c	70;"	d	file:
 PKT_TX_ACK	muti_pkt_fwd.c	61;"	d	file:
-PROTOCOL_VERSION	hat_pkt_fwd.c	54;"	d	file:
+PROTOCOL_VERSION	hat_pkt_fwd.c	63;"	d	file:
 PROTOCOL_VERSION	muti_pkt_fwd.c	54;"	d	file:
-PULL_TIMEOUT_MS	hat_pkt_fwd.c	49;"	d	file:
+PULL_TIMEOUT_MS	hat_pkt_fwd.c	58;"	d	file:
 PULL_TIMEOUT_MS	muti_pkt_fwd.c	49;"	d	file:
-PUSH_PATH	hat_pkt_fwd.c	70;"	d	file:
+PUSH_PATH	hat_pkt_fwd.c	79;"	d	file:
 PUSH_PATH	muti_pkt_fwd.c	69;"	d	file:
-PUSH_TIMEOUT_MS	hat_pkt_fwd.c	48;"	d	file:
+PUSH_TIMEOUT_MS	hat_pkt_fwd.c	57;"	d	file:
 PUSH_TIMEOUT_MS	muti_pkt_fwd.c	48;"	d	file:
-QUEUESIZE	radio.h	280;"	d
+QUEUESIZE	radio.h	254;"	d
 RADIO1	single_rx_tx.c	22;"	d	file:
 RADIO2	single_rx_tx.c	23;"	d	file:
 RADIOHEAD	single_rx_tx.c	20;"	d	file:
-READ_ACCESS	radio.h	322;"	d
-REG_DETECTION_OPTIMIZE	radio.h	90;"	d
-REG_DETECTION_THRESHOLD	radio.h	91;"	d
-REG_DIO_MAPPING_1	radio.h	73;"	d
-REG_DIO_MAPPING_2	radio.h	74;"	d
-REG_FIFO	radio.h	65;"	d
-REG_FIFO_ADDR_PTR	radio.h	67;"	d
-REG_FIFO_RX_BASE_AD	radio.h	69;"	d
-REG_FIFO_RX_CURRENT_ADDR	radio.h	71;"	d
-REG_FIFO_TX_BASE_AD	radio.h	68;"	d
-REG_FRF_LSB	radio.h	149;"	d
-REG_FRF_MID	radio.h	148;"	d
-REG_FRF_MSB	radio.h	147;"	d
-REG_HOP_PERIOD	radio.h	83;"	d
-REG_INVERTIQ	radio.h	154;"	d
-REG_INVERTIQ2	radio.h	155;"	d
-REG_IRQ_FLAGS	radio.h	72;"	d
-REG_IRQ_FLAGS_MASK	radio.h	81;"	d
-REG_LNA	radio.h	102;"	d
-REG_MAX_PAYLOAD_LENGTH	radio.h	82;"	d
-REG_MODEM_CONFIG	radio.h	75;"	d
-REG_MODEM_CONFIG2	radio.h	76;"	d
-REG_MODEM_CONFIG3	radio.h	77;"	d
-REG_OPMODE	radio.h	66;"	d
-REG_PACONFIG	radio.h	151;"	d
-REG_PADAC	radio.h	86;"	d
-REG_PARAMP	radio.h	152;"	d
-REG_PAYLOAD_LENGTH	radio.h	80;"	d
-REG_PKTRSSI	radio.h	87;"	d
-REG_PKT_SNR_VALUE	radio.h	79;"	d
-REG_PREAMBLE_LSB	radio.h	94;"	d
-REG_PREAMBLE_MSB	radio.h	93;"	d
-REG_RSSI	radio.h	88;"	d
-REG_RX_NB_BYTES	radio.h	70;"	d
-REG_SYMB_TIMEOUT_LSB	radio.h	78;"	d
-REG_SYNC_WORD	radio.h	84;"	d
-REG_VERSION	radio.h	85;"	d
-RXLORA_RXMODE_RSSI_REG_MODEM_CONFIG1	radio.h	158;"	d
-RXLORA_RXMODE_RSSI_REG_MODEM_CONFIG2	radio.h	159;"	d
+READ_ACCESS	radio.h	296;"	d
+REG_DETECTION_OPTIMIZE	radio.h	64;"	d
+REG_DETECTION_THRESHOLD	radio.h	65;"	d
+REG_DIO_MAPPING_1	radio.h	47;"	d
+REG_DIO_MAPPING_2	radio.h	48;"	d
+REG_FIFO	radio.h	39;"	d
+REG_FIFO_ADDR_PTR	radio.h	41;"	d
+REG_FIFO_RX_BASE_AD	radio.h	43;"	d
+REG_FIFO_RX_CURRENT_ADDR	radio.h	45;"	d
+REG_FIFO_TX_BASE_AD	radio.h	42;"	d
+REG_FRF_LSB	radio.h	123;"	d
+REG_FRF_MID	radio.h	122;"	d
+REG_FRF_MSB	radio.h	121;"	d
+REG_HOP_PERIOD	radio.h	57;"	d
+REG_INVERTIQ	radio.h	128;"	d
+REG_INVERTIQ2	radio.h	129;"	d
+REG_IRQ_FLAGS	radio.h	46;"	d
+REG_IRQ_FLAGS_MASK	radio.h	55;"	d
+REG_LNA	radio.h	76;"	d
+REG_MAX_PAYLOAD_LENGTH	radio.h	56;"	d
+REG_MODEM_CONFIG	radio.h	49;"	d
+REG_MODEM_CONFIG2	radio.h	50;"	d
+REG_MODEM_CONFIG3	radio.h	51;"	d
+REG_OPMODE	radio.h	40;"	d
+REG_PACONFIG	radio.h	125;"	d
+REG_PADAC	radio.h	60;"	d
+REG_PARAMP	radio.h	126;"	d
+REG_PAYLOAD_LENGTH	radio.h	54;"	d
+REG_PKTRSSI	radio.h	61;"	d
+REG_PKT_SNR_VALUE	radio.h	53;"	d
+REG_PREAMBLE_LSB	radio.h	68;"	d
+REG_PREAMBLE_MSB	radio.h	67;"	d
+REG_RSSI	radio.h	62;"	d
+REG_RX_NB_BYTES	radio.h	44;"	d
+REG_SYMB_TIMEOUT_LSB	radio.h	52;"	d
+REG_SYNC_WORD	radio.h	58;"	d
+REG_VERSION	radio.h	59;"	d
+RXLORA_RXMODE_RSSI_REG_MODEM_CONFIG1	radio.h	132;"	d
+RXLORA_RXMODE_RSSI_REG_MODEM_CONFIG2	radio.h	133;"	d
 RXMODE_RSSI	radio.h	/^enum { RXMODE_SINGLE, RXMODE_SCAN, RXMODE_RSSI };$/;"	e	enum:__anon1
 RXMODE_SCAN	radio.h	/^enum { RXMODE_SINGLE, RXMODE_SCAN, RXMODE_RSSI };$/;"	e	enum:__anon1
 RXMODE_SINGLE	radio.h	/^enum { RXMODE_SINGLE, RXMODE_SCAN, RXMODE_RSSI };$/;"	e	enum:__anon1
-RXRF_TIMEOUT_S	hat_pkt_fwd.c	52;"	d	file:
+RXRF_TIMEOUT_S	hat_pkt_fwd.c	61;"	d	file:
 RX_MODE	single_rx_tx.c	19;"	d	file:
 SF10	radio.h	/^enum sf_t { SF7=7, SF8, SF9, SF10, SF11, SF12 };$/;"	e	enum:sf_t
 SF11	radio.h	/^enum sf_t { SF7=7, SF8, SF9, SF10, SF11, SF12 };$/;"	e	enum:sf_t
@@ -232,29 +228,29 @@ SF12	radio.h	/^enum sf_t { SF7=7, SF8, SF9, SF10, SF11, SF12 };$/;"	e	enum:sf_t
 SF7	radio.h	/^enum sf_t { SF7=7, SF8, SF9, SF10, SF11, SF12 };$/;"	e	enum:sf_t
 SF8	radio.h	/^enum sf_t { SF7=7, SF8, SF9, SF10, SF11, SF12 };$/;"	e	enum:sf_t
 SF9	radio.h	/^enum sf_t { SF7=7, SF8, SF9, SF10, SF11, SF12 };$/;"	e	enum:sf_t
-SPI_DEV_RX	radio.h	325;"	d
-SPI_DEV_TX	radio.h	326;"	d
-SPI_SPEED	radio.h	324;"	d
+SPI_DEV_RX	radio.h	299;"	d
+SPI_DEV_TX	radio.h	300;"	d
+SPI_SPEED	radio.h	298;"	d
 STARTING_CAPACITY	parson.c	33;"	d	file:
-STATUS_SIZE	hat_pkt_fwd.c	68;"	d	file:
+STATUS_SIZE	hat_pkt_fwd.c	77;"	d	file:
 STATUS_SIZE	muti_pkt_fwd.c	67;"	d	file:
-STD_LORA_PREAMB	hat_pkt_fwd.c	65;"	d	file:
+STD_LORA_PREAMB	hat_pkt_fwd.c	74;"	d	file:
 STD_LORA_PREAMB	muti_pkt_fwd.c	64;"	d	file:
 SUCCESS	parson.c	32;"	d	file:
-SX1276_MC2_RX_PAYLOAD_CRCON	radio.h	140;"	d
-SX1276_MC3_AGCAUTO	radio.h	144;"	d
-SX1276_MC3_LOW_DATA_RATE_OPTIMIZE	radio.h	143;"	d
-TIMESTAMPED	radio.h	41;"	d
-TX_BUFF_SIZE	hat_pkt_fwd.c	67;"	d	file:
+SX1276_MC2_RX_PAYLOAD_CRCON	radio.h	114;"	d
+SX1276_MC3_AGCAUTO	radio.h	118;"	d
+SX1276_MC3_LOW_DATA_RATE_OPTIMIZE	radio.h	117;"	d
+TIMESTAMPED	radio.h	19;"	d
+TX_BUFF_SIZE	hat_pkt_fwd.c	76;"	d	file:
 TX_BUFF_SIZE	muti_pkt_fwd.c	66;"	d	file:
 TX_JIT_DELAY	jitqueue.c	19;"	d	file:
 TX_MARGIN_DELAY	jitqueue.c	17;"	d	file:
 TX_MAX_ADVANCE_DELAY	jitqueue.c	20;"	d	file:
 TX_MODE	single_rx_tx.c	18;"	d	file:
 TX_START_DELAY	jitqueue.c	15;"	d	file:
-VERSION_STRING	hat_pkt_fwd.c	43;"	d	file:
+VERSION_STRING	hat_pkt_fwd.c	52;"	d	file:
 VERSION_STRING	muti_pkt_fwd.c	43;"	d	file:
-WRITE_ACCESS	radio.h	323;"	d
+WRITE_ACCESS	radio.h	297;"	d
 _BASE64_H	base64.h	18;"	d
 _LORA_PKTFWD_JIT_H	jitqueue.h	2;"	d
 _RADIO_H	radio.h	13;"	d
@@ -264,7 +260,7 @@ _XOPEN_SOURCE	muti_pkt_fwd.c	18;"	d	file:
 _XOPEN_SOURCE	muti_pkt_fwd.c	20;"	d	file:
 __compar_d_fn_t	jitqueue.c	/^typedef int (*__compar_d_fn_t) (const void *, const void *, void *);$/;"	t	file:
 already_running	radio.c	/^int already_running(void)$/;"	f
-alt	hat_pkt_fwd.c	/^static int   alt=0;$/;"	v	file:
+alt	hat_pkt_fwd.c	/^static float alt = 0.0;$/;"	v	file:
 alt	muti_pkt_fwd.c	/^static int   alt=0;$/;"	v	file:
 array	parson.c	/^    JSON_Array  *array;$/;"	m	union:json_value_value	file:
 autoquit_threshold	hat_pkt_fwd.c	/^static uint32_t autoquit_threshold = 0; \/* enable auto-quit after a number of non-acknowledged PULL_DATA (0 = disabled)*\/$/;"	v	file:
@@ -295,7 +291,6 @@ cr	radio.h	/^    uint8_t cr;$/;"	m	struct:__anon2
 cr	single_rx_tx.c	/^static char cr[8] = "5";$/;"	v	file:
 crc	radio.h	/^    uint16_t    crc;          \/*!> CRC that was received in the payload *\/$/;"	m	struct:pkt_rx_s
 crccheck	radio.c	/^void crccheck(uint8_t spidev, uint8_t nocrc)$/;"	f
-ctx	hat_pkt_fwd.c	/^static struct uci_context * ctx = NULL; $/;"	v	typeref:struct:uci_context	file:
 ctx	muti_pkt_fwd.c	/^static struct uci_context * ctx = NULL; $/;"	v	typeref:struct:uci_context	file:
 datarate	radio.h	/^    uint32_t    datarate;       \/*!> TX datarate (baudrate for FSK, SF for LoRa) *\/$/;"	m	struct:pkt_tx_s
 desc	radio.h	/^    char desc[8];$/;"	m	struct:__anon2
@@ -307,9 +302,8 @@ difftimespec	muti_pkt_fwd.c	/^static double difftimespec(struct timespec end, st
 digitalRead	radio.c	/^int digitalRead(int gpio) {$/;"	f
 digitalWrite	radio.c	/^void digitalWrite(int gpio, int state)$/;"	f
 dio	radio.h	/^    uint8_t dio[3];$/;"	m	struct:__anon2
-dwport	hat_pkt_fwd.c	/^static char dwport[8] = "dwport"; \/* server port for upstream traffic *\/$/;"	v	file:
 dwport	muti_pkt_fwd.c	/^static char dwport[8] = "dwport"; \/* server port for downstream traffic *\/$/;"	v	file:
-email	hat_pkt_fwd.c	/^static char email[32]  = "email";                        \/* used for contact email *\/$/;"	v	file:
+email	hat_pkt_fwd.c	/^static char email[32]  = "support@dragino.com";                        \/* used for contact email *\/$/;"	v	file:
 email	muti_pkt_fwd.c	/^static char email[32]  = "email";                        \/* used for contact email *\/$/;"	v	file:
 empty	radio.h	/^    uint8_t     empty;        \/*!> empty label *\/$/;"	m	struct:pkt_rx_s
 exit_sig	hat_pkt_fwd.c	/^volatile bool exit_sig = false; \/* 1 -> application terminates cleanly (shut down hardware, close open files, etc) *\/$/;"	v
@@ -319,15 +313,11 @@ filepath	single_rx_tx.c	/^static char filepath[32] = {'\\0'};$/;"	v	file:
 freq	radio.h	/^    uint32_t freq;$/;"	m	struct:__anon2
 freq	single_rx_tx.c	/^static char freq[16] = "868500000";            \/* frequency of radio *\/$/;"	v	file:
 freq_hz	radio.h	/^    uint32_t    freq_hz;        \/*!> center frequency of TX *\/$/;"	m	struct:pkt_tx_s
-fwd_error_pkt	hat_pkt_fwd.c	/^static bool fwd_error_pkt = false; \/* packets with PAYLOAD CRC ERROR are NOT forwarded *\/$/;"	v	file:
 fwd_error_pkt	muti_pkt_fwd.c	/^static bool fwd_error_pkt = false; \/* packets with PAYLOAD CRC ERROR are NOT forwarded *\/$/;"	v	file:
-fwd_nocrc_pkt	hat_pkt_fwd.c	/^static bool fwd_nocrc_pkt = false; \/* packets with NO PAYLOAD CRC are NOT forwarded *\/$/;"	v	file:
 fwd_nocrc_pkt	muti_pkt_fwd.c	/^static bool fwd_nocrc_pkt = false; \/* packets with NO PAYLOAD CRC are NOT forwarded *\/$/;"	v	file:
-fwd_valid_pkt	hat_pkt_fwd.c	/^static bool fwd_valid_pkt = true; \/* packets with PAYLOAD CRC OK are forwarded *\/$/;"	v	file:
 fwd_valid_pkt	muti_pkt_fwd.c	/^static bool fwd_valid_pkt = true; \/* packets with PAYLOAD CRC OK are forwarded *\/$/;"	v	file:
 gatewayid	hat_pkt_fwd.c	/^static char gatewayid[64] = "GWID";$/;"	v	file:
 gatewayid	muti_pkt_fwd.c	/^static char gatewayid[64] = "GWID";$/;"	v	file:
-get_config	hat_pkt_fwd.c	/^static bool get_config(const char *section, char *option, int len) {$/;"	f	file:
 get_config	muti_pkt_fwd.c	/^static bool get_config(const char *section, char *option, int len) {$/;"	f	file:
 get_processed_string	parson.c	/^static const char * get_processed_string(const char **string) {$/;"	f	file:
 get_radio_version	radio.c	/^bool get_radio_version(radiodev *dev)$/;"	f
@@ -413,7 +403,7 @@ json_value_type	parson.h	/^typedef enum json_value_type {$/;"	g
 json_value_value	parson.c	/^typedef union json_value_value {$/;"	u	file:
 keepalive_time	hat_pkt_fwd.c	/^static int keepalive_time = DEFAULT_KEEPALIVE; \/* send a PULL_DATA request every X seconds, negative = disabled *\/$/;"	v	file:
 keepalive_time	muti_pkt_fwd.c	/^static int keepalive_time = DEFAULT_KEEPALIVE; \/* send a PULL_DATA request every X seconds, negative = disabled *\/$/;"	v	file:
-lat	hat_pkt_fwd.c	/^static float lat=0.0;$/;"	v	file:
+lat	hat_pkt_fwd.c	/^static float lat = 0.0;$/;"	v	file:
 lat	muti_pkt_fwd.c	/^static float lat=0.0;$/;"	v	file:
 lgw_spi_open	radio.c	/^int lgw_spi_open(char *spi_path) {$/;"	f
 lgw_spi_r	radio.c	/^static int lgw_spi_r(uint8_t spidev, uint8_t address, uint8_t *data) {$/;"	f	file:
@@ -421,9 +411,9 @@ lgw_spi_w	radio.c	/^static int lgw_spi_w(uint8_t spidev, uint8_t address, uint8_
 lgwm	hat_pkt_fwd.c	/^static uint64_t lgwm = 0; \/* Lora gateway MAC address *\/$/;"	v	file:
 lgwm	muti_pkt_fwd.c	/^static uint64_t lgwm = 0; \/* Lora gateway MAC address *\/$/;"	v	file:
 lockfile	radio.c	/^int lockfile(int fd)$/;"	f
-logdebug	hat_pkt_fwd.c	/^static char logdebug[4] = "DEB";          \/* debug info option *\/$/;"	v	file:
+logdebug	hat_pkt_fwd.c	/^static uint8_t logdebug = 0;          \/* debug info option *\/$/;"	v	file:
 logdebug	muti_pkt_fwd.c	/^static char logdebug[4] = "DEB";          \/* debug info option *\/$/;"	v	file:
-lon	hat_pkt_fwd.c	/^static float lon=0.0;$/;"	v	file:
+lon	hat_pkt_fwd.c	/^static float lon = 0.0;$/;"	v	file:
 lon	muti_pkt_fwd.c	/^static float lon=0.0;$/;"	v	file:
 main	hat_pkt_fwd.c	/^int main(int argc, char *argv[])$/;"	f
 main	muti_pkt_fwd.c	/^int main(int argc, char *argv[])$/;"	f
@@ -496,6 +486,7 @@ opmode	radio.c	/^static void opmode (uint8_t spidev, uint8_t mode) {$/;"	f	file:
 opmodeLora	radio.c	/^static void opmodeLora(uint8_t spidev) {$/;"	f	file:
 parse_array_value	parson.c	/^static JSON_Value * parse_array_value(const char **string, size_t nesting) {$/;"	f	file:
 parse_boolean_value	parson.c	/^static JSON_Value * parse_boolean_value(const char **string) {$/;"	f	file:
+parse_gateway_config	hat_pkt_fwd.c	/^static int parse_gateway_config(const char * conf_file) {$/;"	f	file:
 parse_null_value	parson.c	/^static JSON_Value * parse_null_value(const char **string) {$/;"	f	file:
 parse_number_value	parson.c	/^static JSON_Value * parse_number_value(const char **string) {$/;"	f	file:
 parse_object_value	parson.c	/^static JSON_Value * parse_object_value(const char **string, size_t nesting) {$/;"	f	file:
@@ -519,9 +510,8 @@ pktrx	hat_pkt_fwd.c	/^static struct pkt_rx_s pktrx[QUEUESIZE]; \/* allocat queue
 pktrx	muti_pkt_fwd.c	/^static struct pkt_rx_s pktrx[QUEUESIZE]; \/* allocat queuesize struct of pkt_rx_s *\/$/;"	v	typeref:struct:pkt_rx_s	file:
 pktrx_clean	hat_pkt_fwd.c	/^static void pktrx_clean(struct pkt_rx_s *rx) {$/;"	f	file:
 pktrx_clean	muti_pkt_fwd.c	/^static void pktrx_clean(struct pkt_rx_s *rx) {$/;"	f	file:
-platform	hat_pkt_fwd.c	/^static char platform[16] = "LG01\/OLG01";  \/* platform definition *\/$/;"	v	file:
+platform	hat_pkt_fwd.c	/^static char platform[16] = "GPSHAT";  \/* platform definition *\/$/;"	v	file:
 platform	muti_pkt_fwd.c	/^static char platform[16] = "LG02\/OLG02";  \/* platform definition *\/$/;"	v	file:
-port	hat_pkt_fwd.c	/^static char port[8] = "port"; \/* server port for upstream traffic *\/$/;"	v	file:
 port	muti_pkt_fwd.c	/^static char port[8] = "port"; \/* server port for upstream traffic *\/$/;"	v	file:
 post_delay	jitqueue.h	/^    uint32_t post_delay;            \/* Amount of time after packet timestamp to be reserved (time on air) *\/$/;"	m	struct:jit_node_s
 power	radio.h	/^    uint8_t power;$/;"	m	struct:__anon2
@@ -533,7 +523,6 @@ prev	muti_pkt_fwd.c	/^static int pt = 0, prev = 0;  \/* pt is point of receive p
 print_help	single_rx_tx.c	/^void print_help(void) {$/;"	f
 prlen	radio.h	/^    uint8_t prlen;$/;"	m	struct:__anon2
 prlen	single_rx_tx.c	/^static char prlen[8] = "8";$/;"	v	file:
-provider	hat_pkt_fwd.c	/^static char provider[16] = "provider";$/;"	v	file:
 provider	muti_pkt_fwd.c	/^static char provider[16] = "provider";$/;"	v	file:
 pt	hat_pkt_fwd.c	/^static int pt = 0, prev = 0;  \/* pt is point of receive packet postion,  prev is point of process packet thread*\/$/;"	v	file:
 pt	muti_pkt_fwd.c	/^static int pt = 0, prev = 0;  \/* pt is point of receive packet postion,  prev is point of process packet thread*\/$/;"	v	file:
@@ -553,14 +542,14 @@ readReg	radio.c	/^static uint8_t readReg(uint8_t spidev, uint8_t addr)$/;"	f	fil
 read_file	parson.c	/^static char * read_file(const char * filename) {$/;"	f	file:
 received	radio.c	/^bool received(uint8_t spidev, struct pkt_rx_s *pkt_rx) {$/;"	f
 remove_comments	parson.c	/^static void remove_comments(char *string, const char *start_token, const char *end_token) {$/;"	f	file:
-rf_freq	hat_pkt_fwd.c	/^static char rf_freq[16] = "RFFREQ";            \/* rx frequency of radio *\/$/;"	v	file:
-rf_power	hat_pkt_fwd.c	/^static char rf_power[16] = "RFPOWER";            \/* tx power of radio *\/$/;"	v	file:
+rf_freq	hat_pkt_fwd.c	/^static uint32_t rf_freq = 868100000;            \/* rx frequency of radio *\/$/;"	v	file:
+rf_power	hat_pkt_fwd.c	/^static uint8_t rf_power = 16;            \/* tx power of radio *\/$/;"	v	file:
 rf_power	radio.h	/^    uint8_t     rf_power;       \/*!> TX power, in dBm *\/$/;"	m	struct:pkt_tx_s
-rfbw	hat_pkt_fwd.c	/^static char rfbw[8] = "RFBW";$/;"	v	file:
-rfcr	hat_pkt_fwd.c	/^static char rfcr[8] = "RFCR";$/;"	v	file:
+rfbw	hat_pkt_fwd.c	/^static uint16_t rfbw = 125000;$/;"	v	file:
+rfcr	hat_pkt_fwd.c	/^static uint8_t rfcr = 4;$/;"	v	file:
 rfdev	hat_pkt_fwd.c	/^radiodev *rfdev;$/;"	v
-rfprlen	hat_pkt_fwd.c	/^static char rfprlen[8] = "RFPRLEN";$/;"	v	file:
-rfsf	hat_pkt_fwd.c	/^static char rfsf[8] = "RFSF";$/;"	v	file:
+rfprlen	hat_pkt_fwd.c	/^static uint8_t rfprlen = 8;$/;"	v	file:
+rfsf	hat_pkt_fwd.c	/^static uint8_t rfsf = 7;$/;"	v	file:
 rssi	radio.h	/^    float       rssi;         \/*!> average packet RSSI in dB *\/$/;"	m	struct:pkt_rx_s
 rst	radio.h	/^    uint8_t rst;$/;"	m	struct:__anon2
 rx_freq	muti_pkt_fwd.c	/^static char rx_freq[16] = "RXFREQ";            \/* rx frequency of radio *\/$/;"	v	file:
@@ -611,10 +600,11 @@ sock_down	muti_pkt_fwd.c	/^static int sock_down; \/* socket for downstream traff
 sock_up	hat_pkt_fwd.c	/^static int sock_up; \/* socket for upstream traffic *\/$/;"	v	file:
 sock_up	muti_pkt_fwd.c	/^static int sock_up; \/* socket for upstream traffic *\/$/;"	v	file:
 spiport	radio.h	/^    uint8_t  spiport;$/;"	m	struct:__anon2
+stat_interval	hat_pkt_fwd.c	/^static int stat_interval = 45; \/* send a STAT  every X seconds *\/$/;"	v	file:
 stat_interval	hat_pkt_fwd.c	/^static unsigned stat_interval = DEFAULT_STAT; \/* time interval (in sec) at which statistics are collected and displayed *\/$/;"	v	file:
 stat_interval	muti_pkt_fwd.c	/^static unsigned stat_interval = DEFAULT_STAT; \/* time interval (in sec) at which statistics are collected and displayed *\/$/;"	v	file:
 string	parson.c	/^    const char  *string;$/;"	m	union:json_value_value	file:
-syncwd	hat_pkt_fwd.c	/^static char syncwd[8] = "SYNCWD";            \/* tx frequency of radio *\/$/;"	v	file:
+syncwd	hat_pkt_fwd.c	/^static uinit8_t syncwd = 52;            \/* tx frequency of radio *\/$/;"	v	file:
 syncwd1	muti_pkt_fwd.c	/^static char syncwd1[8] = "SYNCWD";            \/* tx frequency of radio *\/$/;"	v	file:
 syncwd2	muti_pkt_fwd.c	/^static char syncwd2[8] = "SYNCWD";            \/* tx frequency of radio *\/$/;"	v	file:
 syncword	radio.h	/^    uint8_t syncword;$/;"	m	struct:__anon2
@@ -640,7 +630,6 @@ txlora	radio.c	/^void txlora(radiodev *dev, struct pkt_tx_s *pkt) {$/;"	f
 txprlen	muti_pkt_fwd.c	/^static char txprlen[8] = "TXPRLEN";$/;"	v	file:
 txsf	muti_pkt_fwd.c	/^static char txsf[8] = "TXSF";$/;"	v	file:
 type	parson.c	/^    JSON_Value_Type     type;$/;"	m	struct:json_value_t	file:
-uci_config_file	hat_pkt_fwd.c	/^static char uci_config_file[32] = {'\\0'};$/;"	v	file:
 uci_config_file	muti_pkt_fwd.c	/^static char uci_config_file[32] = {'\\0'};$/;"	v	file:
 unselectreceiver	radio.c	/^static void unselectreceiver(int pin)$/;"	f	file:
 value	parson.c	/^    JSON_Value_Value    value;$/;"	m	struct:json_value_t	file:
