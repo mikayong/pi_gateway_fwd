@@ -1,6 +1,6 @@
 ### Application-specific constants
 
-APP_NAME := util_tx_test
+APP_NAME := util_tx_continuous
 
 ### Environment constants 
 
@@ -27,6 +27,7 @@ OBJDIR = obj
 
 LGW_INC = $(LGW_PATH)/inc/config.h
 LGW_INC += $(LGW_PATH)/inc/loragw_hal.h
+LGW_INC += $(LGW_PATH)/inc/loragw_reg.h
 LGW_INC += $(LGW_PATH)/inc/loragw_aux.h
 
 ### Linking options

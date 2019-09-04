@@ -1,47 +1,34 @@
-	 / _____)             _              | |    
-	( (____  _____ ____ _| |_ _____  ____| |__  
-	 \____ \| ___ |    (_   _) ___ |/ ___)  _ \ 
+	  ______                              _
+	 / _____)             _              | |
+	( (____  _____ ____ _| |_ _____  ____| |__
+	 \____ \| ___ |    (_   _) ___ |/ ___)  _ \
 	 _____) ) ____| | | || |_| ____( (___| | | |
 	(______/|_____)_|_|_| \__)_____)\____)_| |_|
-	  (C)2013 Semtech-Cycleo
+	  (C)2014 Semtech-Cycleo
 
-LoRa concentrator packet sender
-================================
+Tx continuous program for LoRa concentrator
+===========================================
+
 
 1. Introduction
 ----------------
 
-This software is used to send test packets with a LoRa concentrator. The packets
-contain little information, on no protocol (ie. MAC address) information but
-can be used to assess the functionality of a gateway downlink using other
-gateways as receivers.
+This software is used to set LoRa concentrator in Tx continuous mode, for
+spectral measurement.
+The user can set the modulation type, the modulation parameters, and the
+multiple gains of the Tx chain.
+The program runs indefinitely, until the user stops the application.
 
-2. Dependencies
-----------------
 
-This program is a typical example of LoRa concentrator HAL usage for sending
-packets.
+2. Usage
+--------
 
-Only high-level functions are used (the ones contained in loragw_hal) so there
-is no hardware dependencies assuming the HAL is matched with the proper version
-of the hardware.
-Data structures of the sent packets are accessed by name (ie. not at a
-binary level) so new functionalities can be added to the API without affecting
-that program at all.
+See command line help to get the list of all available options:
+./util_tx_continuous -h
 
-3. Usage
----------
+Example:
+./util_tx_continuous -f 868 -r 1257 --dig 0 --mix 14 --pa 3 --mod "LORA" --sf 7 --bw 125
 
-The application runs until the specified number of packets have been sent.
-Press Ctrl+C to stop the application before that.
-
-Use the -h to get help and details about available options.
-
-The payload content is:
-[T][E][S][T][packet counter MSB][packet counter LSB] followed by ASCII padding.
-
-All LoRa data is scrambled and whitened, so the padding has no influence
-whatsoever on the packet error rate.
 
 4. License
 -----------

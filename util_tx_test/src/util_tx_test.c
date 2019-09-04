@@ -7,7 +7,7 @@
   (C)2013 Semtech-Cycleo
 
 Description:
-    Ask a gateway to emit packets using GW <-> server protocol
+    Send a bunch of packets on a settable frequency
 
 License: Revised BSD License, see LICENSE.TXT file include in the project
 Maintainer: Sylvain Miermont
@@ -27,36 +27,33 @@ Maintainer: Sylvain Miermont
 #include <stdint.h>     /* C99 types */
 #include <stdbool.h>    /* bool type */
 #include <stdio.h>      /* printf fprintf sprintf fopen fputs */
-#include <unistd.h>     /* getopt access usleep */
 
 #include <string.h>     /* memset */
 #include <signal.h>     /* sigaction */
+#include <unistd.h>     /* getopt access */
 #include <stdlib.h>     /* exit codes */
-#include <errno.h>      /* error messages */
+#include <getopt.h>     /* getopt_long */
 
-#include <sys/socket.h> /* socket specific definitions */
-#include <netinet/in.h> /* INET constants and stuff */
-#include <arpa/inet.h>  /* IP address conversion stuff */
-#include <netdb.h>      /* gai_strerror */
-
-#include "base64.h"
+#include "loragw_hal.h"
+#include "loragw_reg.h"
+#include "loragw_aux.h"
 
 /* -------------------------------------------------------------------------- */
 /* --- PRIVATE MACROS ------------------------------------------------------- */
 
-#define ARRAY_SIZE(a)   (sizeof(a) / sizeof((a)[0]))
-#define MSG(args...)    fprintf(stderr, args) /* message that is destined to the user */
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#define MSG(args...) fprintf(stderr, args) /* message that is destined to the user */
 
 /* -------------------------------------------------------------------------- */
 /* --- PRIVATE CONSTANTS ---------------------------------------------------- */
 
-#define PROTOCOL_VERSION 2
-
-#define PKT_PUSH_DATA   0
-#define PKT_PUSH_ACK    1
-#define PKT_PULL_DATA   2
-#define PKT_PULL_RESP   3
-#define PKT_PULL_ACK    4
+#define TX_RF_CHAIN                 0 /* TX only supported on radio A */
+#define DEFAULT_RSSI_OFFSET         0.0
+#define DEFAULT_MODULATION          "LORA"
+#define DEFAULT_BR_KBPS             50
+#define DEFAULT_FDEV_KHZ            25
+#define DEFAULT_NOTCH_FREQ          129000U /* 129 kHz */
+#define DEFAULT_SX127X_RSSI_OFFSET  -4 /* dB */
 
 /* -------------------------------------------------------------------------- */
 /* --- PRIVATE VARIABLES (GLOBAL) ------------------------------------------- */
@@ -65,6 +62,45 @@ Maintainer: Sylvain Miermont
 struct sigaction sigact; /* SIGQUIT&SIGINT&SIGTERM signal handling */
 static int exit_sig = 0; /* 1 -> application terminates cleanly (shut down hardware, close open files, etc) */
 static int quit_sig = 0; /* 1 -> application terminates without shutting down the hardware */
+
+/* TX gain LUT table */
+static struct lgw_tx_gain_lut_s txgain_lut = {
+    .size = 5,
+    .lut[0] = {
+        .dig_gain = 0,
+        .pa_gain = 0,
+        .dac_gain = 3,
+        .mix_gain = 12,
+        .rf_power = 0
+    },
+    .lut[1] = {
+        .dig_gain = 0,
+        .pa_gain = 1,
+        .dac_gain = 3,
+        .mix_gain = 12,
+        .rf_power = 10
+    },
+    .lut[2] = {
+        .dig_gain = 0,
+        .pa_gain = 2,
+        .dac_gain = 3,
+        .mix_gain = 10,
+        .rf_power = 14
+    },
+    .lut[3] = {
+        .dig_gain = 0,
+        .pa_gain = 3,
+        .dac_gain = 3,
+        .mix_gain = 9,
+        .rf_power = 20
+    },
+    .lut[4] = {
+        .dig_gain = 0,
+        .pa_gain = 3,
+        .dac_gain = 3,
+        .mix_gain = 14,
+        .rf_power = 27
+    }};
 
 /* -------------------------------------------------------------------------- */
 /* --- PRIVATE FUNCTIONS DECLARATION ---------------------------------------- */
@@ -86,22 +122,36 @@ static void sig_handler(int sigio) {
 
 /* describe command line options */
 void usage(void) {
-    MSG("Usage: util_tx_test {options}\n");
-    MSG("Available options:\n");
-    MSG(" -h print this help\n");
-    MSG(" -n <int or service> port number for gateway link\n");
-    MSG(" -f <float> target frequency in MHz\n");
-    MSG(" -m <str> Modulation type ['LORA, 'FSK']\n");
-    MSG(" -s <int> Spreading Factor [7:12]\n");
-    MSG(" -b <int> Modulation bandwidth in kHz [125,250,500]\n");
-    MSG(" -d <uint> FSK frequency deviation in kHz [1:250]\n");
-    MSG(" -r <float> FSK bitrate in kbps [0.5:250]\n");
-    MSG(" -p <int> RF power (dBm)\n");
-    MSG(" -z <uint> Payload size in bytes [9:255]\n");
-    MSG(" -t <int> pause between packets (ms)\n");
-    MSG(" -x <int> numbers of times the sequence is repeated\n");
-    MSG(" -v <uint> test ID, inserted in payload for PER test [0:255]\n");
-    MSG(" -i send packet using inverted modulation polarity \n");
+    int i;
+
+    printf("*** Library version information ***\n%s\n\n", lgw_version_info());
+    printf("Available options:\n");
+    printf(" -h                 print this help\n");
+    printf(" -r         <int>   radio type (SX1255:1255, SX1257:1257)\n");
+    printf(" -n         <uint>  TX notch filter frequency in kHz [126..250]\n");
+    printf(" -f         <float> target frequency in MHz\n");
+    printf(" -k         <uint>  concentrator clock source (0:Radio A, 1:Radio B)\n");
+    printf(" -m         <str>   modulation type ['LORA', 'FSK']\n");
+    printf(" -b         <uint>  LoRa bandwidth in kHz [125, 250, 500]\n");
+    printf(" -s         <uint>  LoRa Spreading Factor [7-12]\n");
+    printf(" -c         <uint>  LoRa Coding Rate [1-4]\n");
+    printf(" -d         <uint>  FSK frequency deviation in kHz [1:250]\n");
+    printf(" -q         <float> FSK bitrate in kbps [0.5:250]\n");
+    printf(" -p         <int>   RF power (dBm) [ ");
+    for (i = 0; i < txgain_lut.size; i++) {
+        printf("%ddBm ", txgain_lut.lut[i].rf_power);
+    }
+    printf("]\n");
+    printf(" -l         <uint>  LoRa preamble length (symbols)\n");
+    printf(" -z         <uint>  payload size (bytes, <256)\n");
+    printf(" -i                 send packet using inverted modulation polarity\n");
+    printf(" -t         <uint>  pause between packets (ms)\n");
+    printf(" -x         <int>   nb of times the sequence is repeated (-1 loop until stopped)\n");
+    printf(" --lbt-freq         <float> lbt first channel frequency in MHz\n");
+    printf(" --lbt-nbch         <uint>  lbt number of channels [1..8]\n");
+    printf(" --lbt-sctm         <uint>  lbt scan time in usec to be applied to all channels [128, 5000]\n");
+    printf(" --lbt-rssi         <int>   lbt rssi target in dBm [-128..0]\n");
+    printf(" --lbt-rssi-offset  <int>   rssi offset in dB to be applied to SX127x RSSI [-128..127]\n");
 }
 
 /* -------------------------------------------------------------------------- */
@@ -109,81 +159,96 @@ void usage(void) {
 
 int main(int argc, char **argv)
 {
-    int i, j, x;
-    unsigned int xu;
+    int i;
+    uint8_t status_var;
+
+    /* user entry parameters */
+    int xi = 0;
+    unsigned int xu = 0;
+    double xd = 0.0;
+    float xf = 0.0;
     char arg_s[64];
 
     /* application parameters */
-    char mod[64] = "LORA"; /* LoRa modulation by default */
-    float f_target = 866.0; /* target frequency */
+    char mod[64] = DEFAULT_MODULATION;
+    uint32_t f_target = 0; /* target frequency - invalid default value, has to be specified by user */
     int sf = 10; /* SF10 by default */
+    int cr = 1; /* CR1 aka 4/5 by default */
     int bw = 125; /* 125kHz bandwidth by default */
     int pow = 14; /* 14 dBm by default */
+    int preamb = 8; /* 8 symbol preamble by default */
+    int pl_size = 16; /* 16 bytes payload by default */
     int delay = 1000; /* 1 second between packets by default */
-    int repeat = 1; /* sweep only once by default */
+    int repeat = -1; /* by default, repeat until stopped */
     bool invert = false;
-    float br_kbps = 50; /* 50 kbps by default */
-    uint8_t fdev_khz = 25; /* 25 khz by default */
+    float br_kbps = DEFAULT_BR_KBPS;
+    uint8_t fdev_khz = DEFAULT_FDEV_KHZ;
+    bool lbt_enable = false;
+    uint32_t lbt_f_target = 0;
+    uint32_t lbt_sc_time = 5000;
+    int8_t lbt_rssi_target_dBm = -80;
+    int8_t lbt_rssi_offset_dB = DEFAULT_SX127X_RSSI_OFFSET;
+    uint8_t  lbt_nb_channel = 1;
+    uint32_t sx1301_count_us;
+    uint32_t tx_notch_freq = DEFAULT_NOTCH_FREQ;
 
-    /* packet payload variables */
-    int payload_size = 9; /* minimum size for PER frame */
-    uint8_t payload_bin[255];
-    char payload_b64[341];
-    int payload_index;
+    /* RF configuration (TX fail if RF chain is not enabled) */
+    enum lgw_radio_type_e radio_type = LGW_RADIO_TYPE_NONE;
+    uint8_t clocksource = 1; /* Radio B is source by default */
+    struct lgw_conf_board_s boardconf;
+    struct lgw_conf_lbt_s lbtconf;
+    struct lgw_conf_rxrf_s rfconf;
 
-    /* PER payload variables */
-    uint8_t id = 0;
+    /* allocate memory for packet sending */
+    struct lgw_pkt_tx_s txpkt; /* array containing 1 outbound packet + metadata */
 
-    /* server socket creation */
-    int sock; /* socket file descriptor */
-    struct addrinfo hints;
-    struct addrinfo *result; /* store result of getaddrinfo */
-    struct addrinfo *q; /* pointer to move into *result data */
-    char serv_port[8] = "1680";
-    char host_name[64];
-    char port_name[64];
+    /* loop variables (also use as counters in the packet payload) */
+    uint16_t cycle_count = 0;
 
-    /* variables for receiving and sending packets */
-    struct sockaddr_storage dist_addr;
-    socklen_t addr_len = sizeof dist_addr;
-    uint8_t databuf[500];
-    int buff_index;
-    int byte_nb;
-
-    /* variables for gateway identification */
-    uint32_t raw_mac_h; /* Most Significant Nibble, network order */
-    uint32_t raw_mac_l; /* Least Significant Nibble, network order */
-    uint64_t gw_mac; /* MAC address of the client (gateway) */
-
-    /* prepare hints to open network sockets */
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC; /* should handle IP v4 or v6 automatically */
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE; /* will assign local IP automatically */
+    /* Parameter parsing */
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"lbt-freq", required_argument, 0, 0},
+        {"lbt-sctm", required_argument, 0, 0},
+        {"lbt-rssi", required_argument, 0, 0},
+        {"lbt-nbch", required_argument, 0, 0},
+        {"lbt-rssi-offset", required_argument, 0, 0},
+        {0, 0, 0, 0}
+    };
 
     /* parse command line options */
-    while ((i = getopt (argc, argv, "hn:f:m:s:b:d:r:p:z:t:x:v:i")) != -1) {
+    while ((i = getopt_long (argc, argv, "hif:n:m:b:s:c:p:l:z:t:x:r:k:d:q:", long_options, &option_index)) != -1) {
         switch (i) {
             case 'h':
                 usage();
                 return EXIT_FAILURE;
                 break;
 
-            case 'n': /* -n <int or service> port number for gateway link */
-                strncpy(serv_port, optarg, sizeof serv_port);
-                break;
-
-            case 'f': /* -f <float> target frequency in MHz */
-                i = sscanf(optarg, "%f", &f_target);
-                if ((i != 1) || (f_target < 30.0) || (f_target > 3000.0)) {
+            case 'f': /* <float> Target frequency in MHz */
+                i = sscanf(optarg, "%lf", &xd);
+                if ((i != 1) || (xd < 30.0) || (xd > 3000.0)) {
                     MSG("ERROR: invalid TX frequency\n");
+                    usage();
                     return EXIT_FAILURE;
+                } else {
+                    f_target = (uint32_t)((xd*1e6) + 0.5); /* .5 Hz offset to get rounding instead of truncating */
                 }
                 break;
 
-            case 'm': /* -m <str> Modulation type */
+            case 'n': /* <uint> TX notch filter frequency in kHz */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || ((xi < 126) || (xi > 250))) {
+                    MSG("ERROR: invalid TX notch filter frequency\n");
+                    usage();
+                    return EXIT_FAILURE;
+                } else {
+                    tx_notch_freq = xi*1000;
+                }
+                break;
+
+            case 'm': /* <str> Modulation type */
                 i = sscanf(optarg, "%s", arg_s);
-                if ((i != 1) || ((strcmp(arg_s, "LORA") != 0) && (strcmp(arg_s, "FSK")))) {
+                if ((i != 1) || ((strcmp(arg_s,"LORA") != 0) && (strcmp(arg_s,"FSK")))) {
                     MSG("ERROR: invalid modulation type\n");
                     usage();
                     return EXIT_FAILURE;
@@ -192,23 +257,51 @@ int main(int argc, char **argv)
                 }
                 break;
 
-            case 's': /* -s <int> Spreading Factor */
-                i = sscanf(optarg, "%i", &sf);
-                if ((i != 1) || (sf < 7) || (sf > 12)) {
+            case 'b': /* <int> Modulation bandwidth in kHz */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || ((xi != 125) && (xi != 250) && (xi != 500))) {
+                    MSG("ERROR: invalid LoRa bandwidth\n");
+                    usage();
+                    return EXIT_FAILURE;
+                } else {
+                    bw = xi;
+                }
+                break;
+
+            case 's': /* <int> Spreading Factor */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || (xi < 7) || (xi > 12)) {
                     MSG("ERROR: invalid spreading factor\n");
+                    usage();
                     return EXIT_FAILURE;
+                } else {
+                    sf = xi;
                 }
                 break;
 
-            case 'b': /* -b <int> Modulation bandwidth in kHz */
-                i = sscanf(optarg, "%i", &bw);
-                if ((i != 1) || ((bw != 125) && (bw != 250) && (bw != 500))) {
-                    MSG("ERROR: invalid LORA bandwidth\n");
+            case 'c': /* <int> Coding Rate */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || (xi < 1) || (xi > 4)) {
+                    MSG("ERROR: invalid coding rate\n");
+                    usage();
                     return EXIT_FAILURE;
+                } else {
+                    cr = xi;
                 }
                 break;
 
-            case 'd': /* -d <uint> FSK frequency deviation */
+            case 'p': /* <int> RF power */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || (xi < -60) || (xi > 60)) {
+                    MSG("ERROR: invalid RF power\n");
+                    usage();
+                    return EXIT_FAILURE;
+                } else {
+                    pow = xi;
+                }
+                break;
+
+            case 'd': /* <uint> FSK frequency deviation */
                 i = sscanf(optarg, "%u", &xu);
                 if ((i != 1) || (xu < 1) || (xu > 250)) {
                     MSG("ERROR: invalid FSK frequency deviation\n");
@@ -219,96 +312,188 @@ int main(int argc, char **argv)
                 }
                 break;
 
-            case 'r': /* -q <float> FSK bitrate */
-                i = sscanf(optarg, "%f", &br_kbps);
-                if ((i != 1) || (br_kbps < 0.5) || (br_kbps > 250)) {
+            case 'q': /* <float> FSK bitrate */
+                i = sscanf(optarg, "%f", &xf);
+                if ((i != 1) || (xf < 0.5) || (xf > 250)) {
                     MSG("ERROR: invalid FSK bitrate\n");
                     usage();
                     return EXIT_FAILURE;
+                } else {
+                    br_kbps = xf;
                 }
                 break;
 
-            case 'p': /* -p <int> RF power */
-                i = sscanf(optarg, "%i", &pow);
-                if ((i != 1) || (pow < 0) || (pow > 30)) {
-                    MSG("ERROR: invalid RF power\n");
+            case 'l': /* <uint> preamble length (symbols) */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || (xi < 6)) {
+                    MSG("ERROR: preamble length must be >6 symbols \n");
+                    usage();
                     return EXIT_FAILURE;
+                } else {
+                    preamb = xi;
                 }
                 break;
 
-            case 'z': /* -z <uint> Payload size */
-                i = sscanf(optarg, "%i", &payload_size);
-                if ((i != 1) || (payload_size < 9) || (payload_size > 255)) {
+            case 'z': /* <uint> payload length (bytes) */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || (xi <= 0)) {
                     MSG("ERROR: invalid payload size\n");
                     usage();
                     return EXIT_FAILURE;
+                } else {
+                    pl_size = xi;
                 }
                 break;
 
-            case 't': /* -t <int> pause between RF packets (ms) */
-                i = sscanf(optarg, "%i", &delay);
-                if ((i != 1) || (delay < 0)) {
-                    MSG("ERROR: invalid time between RF packets\n");
-                    return EXIT_FAILURE;
-                }
-                break;
-
-            case 'x': /* -x <int> numbers of times the sequence is repeated */
-                i = sscanf(optarg, "%u", &repeat);
-                if ((i != 1) || (repeat < 1)) {
-                    MSG("ERROR: invalid number of repeats\n");
-                    return EXIT_FAILURE;
-                }
-                break;
-
-            case 'v': /* -v <uint> test Id */
-                i = sscanf(optarg, "%u", &xu);
-                if ((i != 1) || ((xu < 1) && (xu > 255))) {
-                    MSG("ERROR: invalid Id\n");
+            case 't': /* <int> pause between packets (ms) */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || (xi < 0)) {
+                    MSG("ERROR: invalid time between packets\n");
+                    usage();
                     return EXIT_FAILURE;
                 } else {
-                    id = (uint8_t)xu;
+                    delay = xi;
                 }
                 break;
 
-            case 'i': /* -i send packet using inverted modulation polarity */
+            case 'x': /* <int> numbers of times the sequence is repeated */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || (xi < -1)) {
+                    MSG("ERROR: invalid number of repeats\n");
+                    usage();
+                    return EXIT_FAILURE;
+                } else {
+                    repeat = xi;
+                }
+                break;
+
+            case 'r': /* <int> Radio type (1255, 1257) */
+                sscanf(optarg, "%i", &xi);
+                switch (xi) {
+                    case 1255:
+                        radio_type = LGW_RADIO_TYPE_SX1255;
+                        break;
+                    case 1257:
+                        radio_type = LGW_RADIO_TYPE_SX1257;
+                        break;
+                    default:
+                        printf("ERROR: invalid radio type\n");
+                        usage();
+                        return EXIT_FAILURE;
+                }
+                break;
+
+            case 'i': /* Send packet using inverted modulation polarity */
                 invert = true;
                 break;
 
+            case 'k': /* <int> Concentrator clock source (Radio A or Radio B) */
+                i = sscanf(optarg, "%i", &xi);
+                if ((i != 1) || ((xi != 0) && (xi != 1))) {
+                    MSG("ERROR: invalid clock source\n");
+                    usage();
+                    return EXIT_FAILURE;
+                } else {
+                    clocksource = (uint8_t)xi;
+                }
+                break;
+
+            case 0:
+                if( strcmp(long_options[option_index].name, "lbt-freq") == 0 ) { /* <float> LBT first channel frequency in MHz */
+                    i = sscanf(optarg, "%lf", &xd);
+                    if ((i != 1) || (xd < 30.0) || (xd > 3000.0)) {
+                        MSG("ERROR: invalid LBT start frequency\n");
+                        usage();
+                        return EXIT_FAILURE;
+                    } else {
+                        lbt_f_target = (uint32_t)((xd*1e6) + 0.5); /* .5 Hz offset to get rounding instead of truncating */
+                        lbt_enable = true;
+                    }
+                } else if( strcmp(long_options[option_index].name, "lbt-sctm") == 0 ) { /* <int> LBT scan time in usec */
+                    if (lbt_enable == true) {
+                        i = sscanf(optarg, "%i", &xi);
+                        if ((i != 1) || (xi < 0)) {
+                            MSG("ERROR: invalid LBT scan time\n");
+                            usage();
+                            return EXIT_FAILURE;
+                        } else {
+                            lbt_sc_time = xi;
+                        }
+                    } else {
+                        MSG("ERROR: invalid parameter, LBT start frequency must be set\n");
+                        usage();
+                        return EXIT_FAILURE;
+                    }
+                } else if( strcmp(long_options[option_index].name, "lbt-rssi") == 0 ) { /* <int> LBT RSSI target */
+                    if (lbt_enable == true) {
+                        i = sscanf(optarg, "%i", &xi);
+                        if ((i != 1) || ((xi < -128) && (xi > 0))) {
+                            MSG("ERROR: invalid LBT RSSI target\n");
+                            usage();
+                            return EXIT_FAILURE;
+                        } else {
+                            lbt_rssi_target_dBm = xi;
+                        }
+                    } else {
+                        MSG("ERROR: invalid parameter, LBT start frequency must be set\n");
+                        usage();
+                        return EXIT_FAILURE;
+                    }
+                } else if( strcmp(long_options[option_index].name, "lbt-rssi-offset") == 0 ) { /* <int> LBT RSSI offset */
+                    if (lbt_enable == true) {
+                        i = sscanf(optarg, "%i", &xi);
+                        if ((i != 1) || ((xi < -128) && (xi > 127))) {
+                            MSG("ERROR: invalid LBT RSSI offset\n");
+                            usage();
+                            return EXIT_FAILURE;
+                        } else {
+                            lbt_rssi_offset_dB = xi;
+                        }
+                    } else {
+                        MSG("ERROR: invalid parameter, LBT start frequency must be set\n");
+                        usage();
+                        return EXIT_FAILURE;
+                    }
+                } else if( strcmp(long_options[option_index].name, "lbt-nbch") == 0 ) { /* <int> LBT number of channels */
+                    if (lbt_enable == true) {
+                        i = sscanf(optarg, "%i", &xi);
+                        if ((i != 1) || (xi < 0)) {
+                            MSG("ERROR: invalid LBT number of channels\n");
+                            usage();
+                            return EXIT_FAILURE;
+                        } else {
+                            lbt_nb_channel = xi;
+                        }
+                    } else {
+                        MSG("ERROR: invalid parameter, LBT start frequency must be set\n");
+                        usage();
+                        return EXIT_FAILURE;
+                    }
+                }
+                break;
             default:
-                MSG("ERROR: argument parsing failure, use -h option for help\n");
+                MSG("ERROR: argument parsing\n");
                 usage();
                 return EXIT_FAILURE;
         }
     }
 
-    /* compose local address (auto-complete a structure for socket) */
-    i = getaddrinfo(NULL, serv_port, &hints, &result);
-    if (i != 0) {
-        MSG("ERROR: getaddrinfo returned %s\n", gai_strerror(i));
-        exit(EXIT_FAILURE);
+    /* check parameter sanity */
+    if (f_target == 0) {
+        MSG("ERROR: frequency parameter not set, please use -f option to specify it.\n");
+        return EXIT_FAILURE;
+    }
+    if (radio_type == LGW_RADIO_TYPE_NONE) {
+        MSG("ERROR: radio type parameter not properly set, please use -r option to specify it.\n");
+        return EXIT_FAILURE;
     }
 
-    /* try to open socket and bind to it */
-    for (q=result; q!=NULL; q=q->ai_next) {
-        sock = socket(q->ai_family, q->ai_socktype,q->ai_protocol);
-        if (sock == -1) {
-            continue; /* socket failed, try next field */
-        } else {
-            i = bind(sock, q->ai_addr, q->ai_addrlen);
-            if (i == -1) {
-                shutdown(sock, SHUT_RDWR);
-                continue; /* bind failed, try next field */
-            } else {
-                break; /* success, get out of loop */
-            }
-        }
+    /* Summary of packet parameters */
+    if (strcmp(mod, "FSK") == 0) {
+        printf("Sending %i FSK packets on %u Hz (FDev %u kHz, Bitrate %.2f, %i bytes payload, %i symbols preamble) at %i dBm, with %i ms between each\n", repeat, f_target, fdev_khz, br_kbps, pl_size, preamb, pow, delay);
+    } else {
+        printf("Sending %i LoRa packets on %u Hz (BW %i kHz, SF %i, CR %i, %i bytes payload, %i symbols preamble) at %i dBm, with %i ms between each\n", repeat, f_target, bw, sf, cr, pl_size, preamb, pow, delay);
     }
-    if (q == NULL) {
-        MSG("ERROR: failed to open socket or to bind to it\n");
-        exit(EXIT_FAILURE);
-    }
-    freeaddrinfo(result);
 
     /* configure signal handling */
     sigemptyset(&sigact.sa_mask);
@@ -318,177 +503,147 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sigact, NULL);
     sigaction(SIGTERM, &sigact, NULL);
 
-    /* display setup summary */
-    if (strcmp(mod, "FSK") == 0) {
-        MSG("INFO: %i FSK pkts @%f MHz (FDev %u kHz, Bitrate %.2f kbps, %uB payload) %i dBm, %i ms between each\n", repeat, f_target, fdev_khz, br_kbps, payload_size, pow, delay);
-    } else {
-        MSG("INFO: %i LoRa pkts @%f MHz (BW %u kHz, SF%i, %uB payload) %i dBm, %i ms between each\n", repeat, f_target, bw, sf, payload_size, pow, delay);
+    /* starting the concentrator */
+    /* board config */
+    memset(&boardconf, 0, sizeof(boardconf));
+    boardconf.lorawan_public = true;
+    boardconf.clksrc = clocksource;
+    lgw_board_setconf(boardconf);
+
+    /* LBT config */
+    if (lbt_enable) {
+        memset(&lbtconf, 0, sizeof(lbtconf));
+        lbtconf.enable = true;
+        lbtconf.nb_channel = lbt_nb_channel;
+        lbtconf.rssi_target = lbt_rssi_target_dBm;
+        lbtconf.rssi_offset = lbt_rssi_offset_dB;
+        lbtconf.channels[0].freq_hz = lbt_f_target;
+        lbtconf.channels[0].scan_time_us = lbt_sc_time;
+        for (i=1; i<lbt_nb_channel; i++) {
+            lbtconf.channels[i].freq_hz = lbtconf.channels[i-1].freq_hz + 200E3; /* 200kHz offset for all channels */
+            lbtconf.channels[i].scan_time_us = lbt_sc_time;
+        }
+        lgw_lbt_setconf(lbtconf);
     }
 
-    /* wait to receive a PULL_DATA request packet */
-    MSG("INFO: waiting to receive a PULL_DATA request on port %s\n", serv_port);
-    while (1) {
-        byte_nb = recvfrom(sock, databuf, sizeof databuf, 0, (struct sockaddr *)&dist_addr, &addr_len);
-        if ((quit_sig == 1) || (exit_sig == 1)) {
-            exit(EXIT_SUCCESS);
-        } else if (byte_nb < 0) {
-            MSG("WARNING: recvfrom returned an error\n");
-        } else if ((byte_nb < 12) || (databuf[0] != PROTOCOL_VERSION) || (databuf[3] != PKT_PULL_DATA)) {
-            MSG("INFO: packet received, not PULL_DATA request\n");
+    /* RF config */
+    memset(&rfconf, 0, sizeof(rfconf));
+    rfconf.enable = true;
+    rfconf.freq_hz = f_target;
+    rfconf.rssi_offset = DEFAULT_RSSI_OFFSET;
+    rfconf.type = radio_type;
+    for (i = 0; i < LGW_RF_CHAIN_NB; i++) {
+        if (i == TX_RF_CHAIN) {
+            rfconf.tx_enable = true;
+            rfconf.tx_notch_freq = tx_notch_freq;
         } else {
-            break; /* success! */
+            rfconf.tx_enable = false;
+        }
+        lgw_rxrf_setconf(i, rfconf);
+    }
+
+    /* TX gain config */
+    lgw_txgain_setconf(&txgain_lut);
+
+    /* Start concentrator */
+    i = lgw_start();
+    if (i == LGW_HAL_SUCCESS) {
+        MSG("INFO: concentrator started, packet can be sent\n");
+    } else {
+        MSG("ERROR: failed to start the concentrator\n");
+        return EXIT_FAILURE;
+    }
+
+    /* fill-up payload and parameters */
+    memset(&txpkt, 0, sizeof(txpkt));
+    txpkt.freq_hz = f_target;
+    if (lbt_enable == true) {
+        txpkt.tx_mode = TIMESTAMPED;
+    } else {
+        txpkt.tx_mode = IMMEDIATE;
+    }
+    txpkt.rf_chain = TX_RF_CHAIN;
+    txpkt.rf_power = pow;
+    if( strcmp( mod, "FSK" ) == 0 ) {
+        txpkt.modulation = MOD_FSK;
+        txpkt.datarate = br_kbps * 1e3;
+        txpkt.f_dev = fdev_khz;
+    } else {
+        txpkt.modulation = MOD_LORA;
+        switch (bw) {
+            case 125: txpkt.bandwidth = BW_125KHZ; break;
+            case 250: txpkt.bandwidth = BW_250KHZ; break;
+            case 500: txpkt.bandwidth = BW_500KHZ; break;
+            default:
+                MSG("ERROR: invalid 'bw' variable\n");
+                return EXIT_FAILURE;
+        }
+        switch (sf) {
+            case  7: txpkt.datarate = DR_LORA_SF7;  break;
+            case  8: txpkt.datarate = DR_LORA_SF8;  break;
+            case  9: txpkt.datarate = DR_LORA_SF9;  break;
+            case 10: txpkt.datarate = DR_LORA_SF10; break;
+            case 11: txpkt.datarate = DR_LORA_SF11; break;
+            case 12: txpkt.datarate = DR_LORA_SF12; break;
+            default:
+                MSG("ERROR: invalid 'sf' variable\n");
+                return EXIT_FAILURE;
+        }
+        switch (cr) {
+            case 1: txpkt.coderate = CR_LORA_4_5; break;
+            case 2: txpkt.coderate = CR_LORA_4_6; break;
+            case 3: txpkt.coderate = CR_LORA_4_7; break;
+            case 4: txpkt.coderate = CR_LORA_4_8; break;
+            default:
+                MSG("ERROR: invalid 'cr' variable\n");
+                return EXIT_FAILURE;
         }
     }
-
-    /* retrieve gateway MAC from the request */
-    raw_mac_h = *((uint32_t *)(databuf+4));
-    raw_mac_l = *((uint32_t *)(databuf+8));
-    gw_mac = ((uint64_t)ntohl(raw_mac_h) << 32) + (uint64_t)ntohl(raw_mac_l);
-
-    /* display info about the sender */
-    i = getnameinfo((struct sockaddr *)&dist_addr, addr_len, host_name, sizeof host_name, port_name, sizeof port_name, NI_NUMERICHOST);
-    if (i == -1) {
-        MSG("ERROR: getnameinfo returned %s \n", gai_strerror(i));
-        exit(EXIT_FAILURE);
-    }
-    MSG("INFO: PULL_DATA request received from gateway 0x%08X%08X (host %s, port %s)\n", (uint32_t)(gw_mac >> 32), (uint32_t)(gw_mac & 0xFFFFFFFF), host_name, port_name);
-
-    /* PKT_PULL_RESP datagrams header */
-    databuf[0] = PROTOCOL_VERSION;
-    databuf[1] = 0; /* no token */
-    databuf[2] = 0; /* no token */
-    databuf[3] = PKT_PULL_RESP;
-    buff_index = 4;
-
-    /* start of JSON structure */
-    memcpy((void *)(databuf + buff_index), (void *)"{\"txpk\":{\"imme\":true", 20);
-    buff_index += 20;
-
-    /* TX frequency */
-    i = snprintf((char *)(databuf + buff_index), 20, ",\"freq\":%.6f", f_target);
-    if ((i>=0) && (i < 20)) {
-        buff_index += i;
-    } else {
-        MSG("ERROR: snprintf failed line %u\n", (__LINE__ - 4));
-        exit(EXIT_FAILURE);
-    }
-
-    /* RF channel */
-    memcpy((void *)(databuf + buff_index), (void *)",\"rfch\":0", 9);
-    buff_index += 9;
-
-    /* TX power */
-    i = snprintf((char *)(databuf + buff_index), 12, ",\"powe\":%i", pow);
-    if ((i>=0) && (i < 12)) {
-        buff_index += i;
-    } else {
-        MSG("ERROR: snprintf failed line %u\n", (__LINE__ - 4));
-        exit(EXIT_FAILURE);
-    }
-
-    /* modulation type and parameters */
-    if (strcmp(mod, "FSK") == 0) {
-        i = snprintf((char *)(databuf + buff_index), 50, ",\"modu\":\"FSK\",\"datr\":%u,\"fdev\":%u", (unsigned int)(br_kbps*1e3), (unsigned int)(fdev_khz*1e3));
-        if ((i>=0) && (i < 50)) {
-            buff_index += i;
-        } else {
-            MSG("ERROR: snprintf failed line %u\n", (__LINE__ - 4));
-            exit(EXIT_FAILURE);
-        }
-    } else {
-        i = snprintf((char *)(databuf + buff_index), 50, ",\"modu\":\"LORA\",\"datr\":\"SF%iBW%i\",\"codr\":\"4/6\"", sf, bw);
-        if ((i>=0) && (i < 50)) {
-            buff_index += i;
-        } else {
-            MSG("ERROR: snprintf failed line %u\n", (__LINE__ - 4));
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    /* signal polarity */
-    if (invert) {
-        memcpy((void *)(databuf + buff_index), (void *)",\"ipol\":true", 12);
-        buff_index += 12;
-    } else {
-        memcpy((void *)(databuf + buff_index), (void *)",\"ipol\":false", 13);
-        buff_index += 13;
-    }
-
-    /* Preamble size */
-    if (strcmp(mod, "LORA") == 0) {
-        memcpy((void *)(databuf + buff_index), (void *)",\"prea\":8", 9);
-        buff_index += 9;
-    }
-
-    /* payload size */
-    i = snprintf((char *)(databuf + buff_index), 12, ",\"size\":%i", payload_size);
-    if ((i>=0) && (i < 12)) {
-        buff_index += i;
-    } else {
-        MSG("ERROR: snprintf failed line %u\n", (__LINE__ - 4));
-        exit(EXIT_FAILURE);
-    }
-
-    /* payload JSON object */
-    memcpy((void *)(databuf + buff_index), (void *)",\"data\":\"", 9);
-    buff_index += 9;
-    payload_index = buff_index; /* keep the value where the payload content start */
-
-    /* payload place-holder & end of JSON structure */
-    x = bin_to_b64(payload_bin, payload_size, payload_b64, sizeof payload_b64); /* dummy conversion to get exact size */
-    if (x >= 0) {
-        buff_index += x;
-    } else {
-        MSG("ERROR: bin_to_b64 failed line %u\n", (__LINE__ - 4));
-        exit(EXIT_FAILURE);
-    }
-
-    /* Close JSON structure */
-    memcpy((void *)(databuf + buff_index), (void *)"\"}}", 3);
-    buff_index += 3; /* ends up being the total length of payload */
+    txpkt.invert_pol = invert;
+    txpkt.preamble = preamb;
+    txpkt.size = pl_size;
+    strcpy((char *)txpkt.payload, "TEST**abcdefghijklmnopqrstuvwxyz#0123456789#ABCDEFGHIJKLMNOPQRSTUVWXYZ#0123456789#abcdefghijklmnopqrstuvwxyz#0123456789#ABCDEFGHIJKLMNOPQRSTUVWXYZ#0123456789#abcdefghijklmnopqrstuvwxyz#0123456789#ABCDEFGHIJKLMNOPQRSTUVWXYZ#0123456789#abcdefghijklmnopqrs#" ); /* abc.. is for padding */
 
     /* main loop */
-    for (i = 0; i < repeat; ++i) {
-        /* fill payload */
-        payload_bin[0] = id;
-        payload_bin[1] = (uint8_t)(i >> 24);
-        payload_bin[2] = (uint8_t)(i >> 16);
-        payload_bin[3] = (uint8_t)(i >> 8);
-        payload_bin[4] = (uint8_t)(i);
-        payload_bin[5] = 'P';
-        payload_bin[6] = 'E';
-        payload_bin[7] = 'R';
-        payload_bin[8] = (uint8_t)(payload_bin[0] + payload_bin[1] + payload_bin[2] + payload_bin[3] + payload_bin[4] + payload_bin[5] + payload_bin[6] + payload_bin[7]);
-        for (j = 0; j < (payload_size - 9); j++) {
-            payload_bin[9+j] = j;
+    cycle_count = 0;
+    while ((repeat == -1) || (cycle_count < repeat)) {
+        ++cycle_count;
+
+        /* refresh counters in payload (big endian, for readability) */
+        txpkt.payload[4] = (uint8_t)(cycle_count >> 8); /* MSB */
+        txpkt.payload[5] = (uint8_t)(cycle_count & 0x00FF); /* LSB */
+
+        /* When LBT is enabled, immediate send is not allowed, so we need
+            to set a timestamp to the packet */
+        if (lbt_enable == true) {
+            /* Get the current SX1301 time */
+            lgw_reg_w(LGW_GPS_EN, 0);
+            lgw_get_trigcnt(&sx1301_count_us);
+            lgw_reg_w(LGW_GPS_EN, 1);
+
+            /* Set packet timestamp to current time + few milliseconds */
+            txpkt.count_us = sx1301_count_us + 50E3;
         }
 
-#if 0
-        for (j = 0; j < payload_size; j++ ) {
-            printf("0x%02X ", payload_bin[j]);
-        }
-        printf("\n");
-#endif
-
-        /* encode the payload in Base64 */
-        x = bin_to_b64(payload_bin, payload_size, payload_b64, sizeof payload_b64);
-        if (x >= 0) {
-            memcpy((void *)(databuf + payload_index), (void *)payload_b64, x);
+        /* send packet */
+        printf("Sending packet number %u ...", cycle_count);
+        i = lgw_send(txpkt); /* non-blocking scheduling of TX packet */
+        if (i == LGW_HAL_ERROR) {
+            printf("ERROR\n");
+            return EXIT_FAILURE;
+        } else if (i == LGW_LBT_ISSUE ) {
+            printf("Failed: Not allowed (LBT)\n");
         } else {
-            MSG("ERROR: bin_to_b64 failed line %u\n", (__LINE__ - 4));
-            exit(EXIT_FAILURE);
-        }
-
-        /* send packet to the gateway */
-        byte_nb = sendto(sock, (void *)databuf, buff_index, 0, (struct sockaddr *)&dist_addr, addr_len);
-        if (byte_nb == -1) {
-            MSG("WARNING: sendto returned an error %s\n", strerror(errno));
-        } else {
-            MSG("INFO: packet #%i sent successfully\n", i);
+            /* wait for packet to finish sending */
+            do {
+                wait_ms(5);
+                lgw_status(TX_STATUS, &status_var); /* get TX status */
+            } while (status_var != TX_FREE);
+            printf("OK\n");
         }
 
         /* wait inter-packet delay */
-        usleep(delay * 1000);
+        wait_ms(delay);
 
         /* exit loop on user signals */
         if ((quit_sig == 1) || (exit_sig == 1)) {
@@ -496,7 +651,11 @@ int main(int argc, char **argv)
         }
     }
 
-    exit(EXIT_SUCCESS);
+    /* clean up before leaving */
+    lgw_stop();
+
+    printf("Exiting LoRa concentrator TX test program\n");
+    return EXIT_SUCCESS;
 }
 
 /* --- EOF ------------------------------------------------------------------ */
